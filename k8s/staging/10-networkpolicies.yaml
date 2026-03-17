@@ -218,3 +218,20 @@ spec:
           protocol: UDP
         - port: 53
           protocol: UDP
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: kli-frontend
+      ports:
+        - port: 8080
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 7844
+          protocol: TCP
+        - port: 7844
+          protocol: UDP
+        - port: 53
+          protocol: UDP
+
