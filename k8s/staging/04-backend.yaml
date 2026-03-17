@@ -39,7 +39,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kli-backend
-          image: ghcr.io/dannut/klist-backend:staging-dbc0bcfdd94fef2742c8521064cf0b8d27dc25a3
+          image: ghcr.io/dannut/klist-backend:staging-0756236deb1ef2dbf164e812271f530c0dd2c9ef
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
