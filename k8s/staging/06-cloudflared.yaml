@@ -14,6 +14,7 @@ spec:
       labels:
         app: cloudflared
       annotations:
+        # Injectăm secretele din Vault
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "kli-staging-backend"
         vault.hashicorp.com/agent-inject-secret-cloudflare: "kli-staging/data/cloudflare"
@@ -23,12 +24,12 @@ spec:
           {{- end }}
     spec:
       serviceAccountName: kli-cloudflared
-      # ASIGURĂ-TE CĂ FUGI DE WORKER2 (cel defect)
+      # Forțăm rularea pe worker1 sau worker3 (evităm worker2)
       nodeSelector:
-        kubernetes.io/hostname: worker1  # Încearcă worker1, am văzut că Postgres merge bine acolo
+        kubernetes.io/hostname: worker1
       containers:
         - name: cloudflared
-          # FOLOSEȘTE ACEST TAG (E cel mai stabil pt Alpine)
+          # Folosim acest tag stabil de Alpine
           image: cloudflare/cloudflared:2025.1.0-alpine
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
