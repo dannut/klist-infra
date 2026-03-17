@@ -44,15 +44,6 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - source /vault/secrets/config && source /vault/secrets/redis && exec /kli-backend
-              source /vault/secrets/config
-              source /vault/secrets/redis
-              
-              # Forțăm formatul pe care îl așteaptă majoritatea librăriilor de Go
-              export REDIS_ADDR="redis.kli-staging.svc.cluster.local:6379"
-             
-              # Uneori binarul vrea URL-ul cu tot cu parolă:
-              export REDIS_URL="redis://default:${REDIS_PASSWORD}@redis.kli-staging.svc.cluster.local:6379"
-              exec /kli-backend
           ports:
             - containerPort: 8080
           env:
