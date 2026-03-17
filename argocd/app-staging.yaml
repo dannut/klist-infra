@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kli-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dannut/klist-infra
+    targetRevision: staging
+    path: k8s/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kli-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
