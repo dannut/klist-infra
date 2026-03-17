@@ -39,6 +39,7 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
+        fsGroup: 999
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -53,6 +54,8 @@ spec:
               value: kli_user
             - name: POSTGRES_PASSWORD_FILE
               value: /vault/secrets/postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -60,6 +63,7 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+              subPath: pgdata
             - name: initdb
               mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
