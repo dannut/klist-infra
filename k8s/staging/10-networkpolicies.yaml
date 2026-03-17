@@ -1,4 +1,4 @@
-# ── Default deny all ingress + egress in namespace kli-staging ────────────────
+# 1. Blocăm tot traficul implicit (Siguranță maximă)
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -11,7 +11,29 @@ spec:
     - Ingress
     - Egress
 
-# ── Frontend: accept din cloudflared, trimite la backend ──────────────────────
+# 2. Permite tuturor pod-urilor să rezolve nume DNS (Esențial pentru comunicare)
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-global
+  namespace: kli-staging
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+# 3. FRONTEND: Primește de la Cloudflare, trimite la Backend
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -39,13 +61,8 @@ spec:
               app: kli-backend
       ports:
         - port: 8080
-    - ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
 
-# ── Backend: accept din frontend, trimite la postgres/redis/ollama ────────────
+# 4. BACKEND: Primește de la Frontend, trimite la DB, Redis, Ollama și Vault
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -67,127 +84,41 @@ spec:
       ports:
         - port: 8080
   egress:
-    - to:
-        - podSelector:
-            matchLabels:
-              app: postgres
-      ports:
-        - port: 5432
-    - to:
-        - podSelector:
-            matchLabels:
-              app: redis
-      ports:
-        - port: 6379
-    - to:
-        - podSelector:
-            matchLabels:
-              app: ollama
-      ports:
-        - port: 11434
-    - ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-
-# ── Postgres: accept doar din backend ─────────────────────────────────────────
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-postgres
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: postgres
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: kli-backend
-      ports:
-        - port: 5432
-
-# ── Redis: accept doar din backend ────────────────────────────────────────────
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-redis
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: redis
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: kli-backend
-      ports:
-        - port: 6379
-
-# ── Ollama: accept din backend, egress internet pentru pull modele ────────────
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-ollama
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: ollama
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: kli-backend
-      ports:
-        - port: 11434
-  egress:
-    - ports:
-        - port: 443
-        - port: 80
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-
-# ── Vault Agent: permite egress catre Vault si DNS din toate podurile ─────────
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-vault-egress
-  namespace: kli-staging
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
+    - to: [{podSelector: {matchLabels: {app: postgres}}}]
+      ports: [{port: 5432}]
+    - to: [{podSelector: {matchLabels: {app: redis}}}]
+      ports: [{port: 6379}]
+    - to: [{podSelector: {matchLabels: {app: ollama}}}]
+      ports: [{port: 11434}]
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: vault
-      ports:
-        - port: 8200
-    - ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
+      ports: [{port: 8200}]
 
-# ── Cloudflared: egress catre internet pentru tunnel ─────────────────────────
+# 5. POSTGRES & REDIS: Acceptă doar de la Backend
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-and-cache
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchExpressions:
+      - {key: app, operator: In, values: [postgres, redis]}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kli-backend
+      ports:
+        - port: 5432
+        - port: 6379
+
+# 6. CLOUDFLARED: Acces la internet pentru Tunel
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -201,144 +132,16 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: kli-frontend
-      ports:
-        - port: 8080
   egress:
     - ports:
         - port: 443
-          protocol: TCP
         - port: 7844
           protocol: TCP
         - port: 7844
           protocol: UDP
-        - port: 53
-          protocol: UDP
-  egress:
     - to:
         - podSelector:
             matchLabels:
               app: kli-frontend
       ports:
         - port: 8080
-    - ports:
-        - port: 443
-          protocol: TCP
-        - port: 7844
-          protocol: TCP
-        - port: 7844
-          protocol: UDP
-        - port: 53
-          protocol: UDP
-
----
-# 1. Permite Frontend-ului să trimită cereri către Backend
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-frontend-to-backend
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: kli-frontend
-  policyTypes:
-  - Egress
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: kli-backend
-    ports:
-    - protocol: TCP
-      port: 8080 # Verifică dacă binarul Go ascultă pe 8080!
-
----
-# 2. Permite Backend-ului să primească cereri de la Frontend
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-backend-from-frontend
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: kli-backend
-  policyTypes:
-  - Ingress
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: kli-frontend
-    ports:
-    - protocol: TCP
-      port: 8080
----
-# 1. Permite Backend-ului să trimită date către Postgres (Port 5432)
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-backend-to-postgres
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: kli-backend
-  policyTypes:
-  - Egress
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: postgres
-    ports:
-    - protocol: TCP
-      port: 5432
-
----
-# 2. Permite Postgres-ului să primească date de la Backend
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-postgres-from-backend
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: postgres
-  policyTypes:
-  - Ingress
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: kli-backend
-    ports:
-    - protocol: TCP
-      port: 5432
----
-# Permite Backend-ului să vorbească cu Redis (Port 6379)
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-backend-to-redis
-  namespace: kli-staging
-spec:
-  podSelector:
-    matchLabels:
-      app: kli-backend
-  policyTypes:
-  - Egress
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: redis
-    ports:
-    - protocol: TCP
-      port: 6379
