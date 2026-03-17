@@ -14,7 +14,6 @@ spec:
       labels:
         app: cloudflared
       annotations:
-        # Injectăm secretele din Vault
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "kli-staging-backend"
         vault.hashicorp.com/agent-inject-secret-cloudflare: "kli-staging/data/cloudflare"
@@ -24,13 +23,12 @@ spec:
           {{- end }}
     spec:
       serviceAccountName: kli-cloudflared
-      # Forțăm rularea pe worker1 sau worker3 (evităm worker2)
       nodeSelector:
         kubernetes.io/hostname: worker1
       containers:
         - name: cloudflared
-          # Folosim acest tag stabil de Alpine
-          image: cloudflare/cloudflared:2025.1.0-alpine
+          # Folosim acest tag care este cel mai stabil pentru Alpine
+          image: cloudflare/cloudflared:latest
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
