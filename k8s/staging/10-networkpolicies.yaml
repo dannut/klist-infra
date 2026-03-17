@@ -278,4 +278,47 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
+---
+# 1. Permite Backend-ului să trimită date către Postgres (Port 5432)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-postgres
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: kli-backend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# 2. Permite Postgres-ului să primească date de la Backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-from-backend
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: kli-backend
+    ports:
+    - protocol: TCP
+      port: 5432
 
