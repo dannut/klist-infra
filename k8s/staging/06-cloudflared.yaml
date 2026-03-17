@@ -16,23 +16,23 @@ spec:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "kli-staging-backend"
-        vault.hashicorp.com/agent-inject-secret-cloudflare: "kli-staging/data/cloudflare"
-        vault.hashicorp.com/agent-inject-template-cloudflare: |
+        # Injecteaza un fisier YAML valid pe care cloudflared il citeste direct
+        vault.hashicorp.com/agent-inject-secret-config.yaml: "kli-staging/data/cloudflare"
+        vault.hashicorp.com/agent-inject-template-config.yaml: |
           {{- with secret "kli-staging/data/cloudflare" -}}
-          {{ .Data.data.TUNNEL_TOKEN }}
+          token: {{ .Data.data.TUNNEL_TOKEN }}
           {{- end }}
     spec:
       serviceAccountName: kli-cloudflared
-      nodeSelector:
-        kubernetes.io/hostname: worker1
       containers:
         - name: cloudflared
-          # Folosim acest tag care este cel mai stabil pentru Alpine
-          image: cloudflare/cloudflared:2024.12.0-alpine
-          imagePullPolicy: Always
-          command: ["/bin/sh", "-c"]
+          image: cloudflare/cloudflared:latest
           args:
-            - "cloudflared tunnel run --token $(cat /vault/secrets/cloudflare)"
+            - tunnel
+            - --no-autoupdate
+            - --config
+            - /vault/secrets/config.yaml
+            - run
           resources:
             requests:
               cpu: 25m
