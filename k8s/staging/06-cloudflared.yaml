@@ -23,12 +23,17 @@ spec:
           {{- end }}
     spec:
       serviceAccountName: kli-cloudflared
+      # ASIGURĂ-TE CĂ FUGI DE WORKER2 (cel defect)
+      nodeSelector:
+        kubernetes.io/hostname: worker1  # Încearcă worker1, am văzut că Postgres merge bine acolo
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:2024.12.0-alpine
+          # FOLOSEȘTE ACEST TAG (E cel mai stabil pt Alpine)
+          image: cloudflare/cloudflared:2025.1.0-alpine
+          imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - cloudflared tunnel run --token $(cat /vault/secrets/cloudflare)
+            - "cloudflared tunnel run --token $(cat /vault/secrets/cloudflare)"
           resources:
             requests:
               cpu: 25m
