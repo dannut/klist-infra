@@ -28,7 +28,7 @@ spec:
       containers:
         - name: cloudflared
           # Folosim acest tag care este cel mai stabil pentru Alpine
-          image: cloudflare/cloudflared:latest-alpine
+          image: cloudflare/cloudflared:2024.12.0
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
