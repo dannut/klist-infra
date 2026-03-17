@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: kli-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "kli-staging-backend"
+        vault.hashicorp.com/agent-inject-secret-cloudflare: "kli-staging/data/cloudflare"
+        vault.hashicorp.com/agent-inject-template-cloudflare: |
+          {{- with secret "kli-staging/data/cloudflare" -}}
+          {{ .Data.data.TUNNEL_TOKEN }}
+          {{- end }}
+    spec:
+      serviceAccountName: kli-cloudflared
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - cloudflared tunnel run --token $(cat /vault/secrets/cloudflare)
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
