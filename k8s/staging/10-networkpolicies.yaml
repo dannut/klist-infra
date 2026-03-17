@@ -235,3 +235,47 @@ spec:
         - port: 53
           protocol: UDP
 
+---
+# 1. Permite Frontend-ului să trimită cereri către Backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: kli-frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: kli-backend
+    ports:
+    - protocol: TCP
+      port: 8080 # Verifică dacă binarul Go ascultă pe 8080!
+
+---
+# 2. Permite Backend-ului să primească cereri de la Frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-from-frontend
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: kli-backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: kli-frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+
