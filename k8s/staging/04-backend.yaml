@@ -39,7 +39,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kli-backend
-          image: ghcr.io/dannut/klist-backend:staging-86848f6dea7bc76bf286ebc21e3b1cd748c81e3f
+          image: ghcr.io/dannut/klist-backend:staging-latest
+          imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
             - source /vault/secrets/config && source /vault/secrets/redis && exec /kli-backend
