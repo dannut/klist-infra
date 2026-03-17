@@ -186,3 +186,35 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+
+# ── Cloudflared: egress catre internet pentru tunnel ─────────────────────────
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cloudflared
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: cloudflared
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kli-frontend
+      ports:
+        - port: 8080
+  egress:
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 7844
+          protocol: TCP
+        - port: 7844
+          protocol: UDP
+        - port: 53
+          protocol: UDP
