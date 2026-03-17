@@ -166,3 +166,36 @@ spec:
       ports:
         - protocol: TCP
           port: 11434
+# 7. OLLAMA: Permite Ingress din Backend și Egress la Internet pentru modele
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ollama-full
+  namespace: kli-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: ollama
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kli-backend
+      ports:
+        - protocol: TCP
+          port: 11434
+  egress:
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+          
