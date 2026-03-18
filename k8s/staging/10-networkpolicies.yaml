@@ -1,4 +1,22 @@
-
+---
+# Permite open door catre vault
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-egress
+  namespace: kli-staging
+spec:
+  podSelector: {} 
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: vault
+    ports:
+    - protocol: TCP
+      port: 8200
 
 # 2. Permite tuturor pod-urilor să rezolve nume DNS (Esențial pentru comunicare)
 ---
