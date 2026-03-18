@@ -29,6 +29,10 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: master
+      securityContext:
+        runAsNonRoot: false  # ollama/ollama runs as root — required for model loading
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: ollama
           image: ollama/ollama:latest
@@ -42,6 +46,9 @@ spec:
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
+          securityContext:
+            allowPrivilegeEscalation: false
+            # capabilities drop omitted — ollama requires root-level capabilities for model mmap
           resources:
             requests:
               cpu: 2000m
@@ -55,6 +62,13 @@ spec:
               port: 11434
             initialDelaySeconds: 30
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
       volumes:
         - name: ollama-data
           persistentVolumeClaim:

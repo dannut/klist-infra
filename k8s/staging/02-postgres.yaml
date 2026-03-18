@@ -71,6 +71,12 @@ spec:
               command: ["pg_isready", "-U", "kli_user", "-d", "kli_db"]
             initialDelaySeconds: 5
             periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "kli_user", "-d", "kli_db"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
           resources:
             requests:
               cpu: 100m
