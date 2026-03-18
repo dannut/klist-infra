@@ -1,15 +1,4 @@
-# 1. Blocăm tot traficul implicit (Siguranță maximă)
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: default-deny-all
-  namespace: kli-staging
-spec:
-  podSelector: {}
-  policyTypes:
-    - Ingress
-    - Egress
+
 
 # 2. Permite tuturor pod-urilor să rezolve nume DNS (Esențial pentru comunicare)
 ---
