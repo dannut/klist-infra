@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """
 kli.st — generate_embeddings.py
-Generates nomic-embed-text embeddings for all commands via Ollama
-and stores them in PostgreSQL (pgvector).
+Generates Gemini text-embedding-004 embeddings (768 dimensions) for all
+commands and stores them in PostgreSQL (pgvector).
 
-Usage (run from kubectl or locally with port-forward):
+Usage (run locally with kubectl port-forward or from a pod):
   python3 generate_embeddings.py
 
-Environment variables (all optional, have defaults for Kubernetes):
-  DB_HOST      PostgreSQL host    (default: postgres.kli.svc.cluster.local)
-  DB_PORT      PostgreSQL port    (default: 5432)
-  DB_USER      PostgreSQL user    (default: kli_user)
-  DB_PASSWORD  PostgreSQL pass    (required)
-  DB_NAME      PostgreSQL db      (default: kli_db)
-  OLLAMA_URL   Ollama base URL    (default: http://ollama.kli.svc.cluster.local:11434)
-  BATCH_SIZE   Commands per batch (default: 10)
+Environment variables:
+  DB_HOST        PostgreSQL host    (default: postgres.kli.svc.cluster.local)
+  DB_PORT        PostgreSQL port    (default: 5432)
+  DB_USER        PostgreSQL user    (default: kli_user)
+  DB_PASSWORD    PostgreSQL pass    (required)
+  DB_NAME        PostgreSQL db      (default: kli_db)
+  GEMINI_API_KEY Google AI API key  (required)
+  BATCH_SIZE     Commands per batch (default: 20)
+
+NOTE: text-embedding-004 produces 768-dimensional vectors.
+      If your pgvector column was created with a different dimension,
+      run the migration first:
+        ALTER TABLE commands ALTER COLUMN embedding TYPE vector(768);
 """
 
 import os
@@ -36,24 +41,32 @@ DB_CONFIG = {
     "dbname":   os.getenv("DB_NAME",     "kli_db"),
 }
 
-OLLAMA_URL  = os.getenv("OLLAMA_URL", "http://ollama.kli.svc.cluster.local:11434")
-MODEL       = "nomic-embed-text"
-BATCH_SIZE  = int(os.getenv("BATCH_SIZE", "10"))
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_EMBED_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models/"
+    "text-embedding-004:embedContent?key={key}"
+)
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "20"))
 
 # ── Embedding ─────────────────────────────────────────────────────────────────
 
 def get_embedding(text: str) -> list:
-    resp = requests.post(
-        f"{OLLAMA_URL}/api/embeddings",
-        json={"model": MODEL, "prompt": text},
-        timeout=30,
-    )
+    url = GEMINI_EMBED_URL.format(key=GEMINI_API_KEY)
+    payload = {
+        "model": "models/text-embedding-004",
+        "content": {"parts": [{"text": text}]},
+    }
+    resp = requests.post(url, json=payload, timeout=15)
     resp.raise_for_status()
-    return resp.json()["embedding"]
+    return resp.json()["embedding"]["values"]
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
+    if not GEMINI_API_KEY:
+        print("ERROR: GEMINI_API_KEY environment variable is not set.")
+        sys.exit(1)
+
     print(f"Connecting to PostgreSQL at {DB_CONFIG['host']}:{DB_CONFIG['port']}...")
     try:
         conn = psycopg2.connect(**DB_CONFIG)
@@ -62,6 +75,22 @@ def main():
         sys.exit(1)
 
     cur = conn.cursor()
+
+    # Verify vector column dimension is 768
+    cur.execute("""
+        SELECT atttypmod FROM pg_attribute
+        WHERE attrelid = 'commands'::regclass AND attname = 'embedding'
+    """)
+    row = cur.fetchone()
+    if row and row[0] != -1:
+        dim = row[0]
+        if dim != 768:
+            print(f"WARNING: embedding column has dimension {dim}, expected 768.")
+            print("Run: ALTER TABLE commands ALTER COLUMN embedding TYPE vector(768);")
+            print("Then re-run this script.")
+            cur.close()
+            conn.close()
+            sys.exit(1)
 
     cur.execute("SELECT COUNT(*) FROM commands WHERE embedding IS NULL")
     total = cur.fetchone()[0]
@@ -73,13 +102,12 @@ def main():
         conn.close()
         return
 
-    # Verify Ollama is reachable
+    # Quick connectivity test
     try:
-        r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
-        r.raise_for_status()
-        print(f"Ollama reachable at {OLLAMA_URL}")
+        test_embedding = get_embedding("test")
+        print(f"Gemini API reachable. Embedding dimension: {len(test_embedding)}")
     except Exception as e:
-        print(f"ERROR: Cannot reach Ollama at {OLLAMA_URL}: {e}")
+        print(f"ERROR: Cannot reach Gemini API: {e}")
         sys.exit(1)
 
     processed = 0
@@ -106,18 +134,19 @@ def main():
             except Exception as e:
                 print(f"  WARNING: Failed embedding for id={cmd_id}: {e}")
                 errors += 1
+            # Gemini free tier: 1500 req/min -> ~50ms between requests
+            time.sleep(0.05)
 
         conn.commit()
         gc.collect()
         pct = round((processed / total) * 100) if total > 0 else 0
         print(f"  {processed}/{total} ({pct}%) done...")
-        time.sleep(0.2)
 
     cur.close()
     conn.close()
     print(f"\nDone! {processed} embeddings generated, {errors} errors.")
     if errors > 0:
-        print(f"Re-run the script to retry failed embeddings.")
+        print("Re-run the script to retry failed embeddings.")
 
 if __name__ == "__main__":
     main()

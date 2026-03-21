@@ -25,6 +25,12 @@ echo "==> Adding Redis secret to Vault for staging..."
 vault kv put kli-staging/redis \
   REDIS_PASSWORD="$(openssl rand -base64 32)"
 
+echo "==> Adding Gemini API key to Vault for staging..."
+echo "    ATENTIE: inlocuieste GEMINI_API_KEY_HERE cu cheia reala din Google AI Studio"
+echo "    Obtine cheia de la: https://aistudio.google.com/app/apikey"
+vault kv put kli-staging/gemini \
+  GEMINI_API_KEY="GEMINI_API_KEY_HERE"
+
 echo "==> Adding Cloudflare tunnel token for test.kli.st..."
 echo "    ATENTIE: inlocuieste TUNNEL_TOKEN_STAGING cu tokenul real din Cloudflare dashboard"
 vault kv put kli-staging/cloudflare \
@@ -36,6 +42,9 @@ path "kli-staging/data/app" {
   capabilities = ["read"]
 }
 path "kli-staging/data/redis" {
+  capabilities = ["read"]
+}
+path "kli-staging/data/gemini" {
   capabilities = ["read"]
 }
 path "kli-staging/data/cloudflare" {
