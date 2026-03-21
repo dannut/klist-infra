@@ -30,6 +30,11 @@ spec:
           {{- with secret "kli-staging/data/redis" -}}
           export REDIS_PASSWORD="{{ .Data.data.REDIS_PASSWORD }}"
           {{- end }}
+        vault.hashicorp.com/agent-inject-secret-gemini: "kli-staging/data/gemini"
+        vault.hashicorp.com/agent-inject-template-gemini: |
+          {{- with secret "kli-staging/data/gemini" -}}
+          export GEMINI_API_KEY="{{ .Data.data.GEMINI_API_KEY }}"
+          {{- end }}
     spec:
       serviceAccountName: kli-backend
       securityContext:
@@ -43,7 +48,7 @@ spec:
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - source /vault/secrets/config && source /vault/secrets/redis && exec /kli-backend
+            - source /vault/secrets/config && source /vault/secrets/redis && source /vault/secrets/gemini && exec /kli-backend
           ports:
             - containerPort: 8080
           env:
@@ -51,8 +56,6 @@ spec:
               value: "https://test.kli.st"
             - name: REDIS_URL
               value: "redis.kli-staging.svc.cluster.local:6379"
-            - name: OLLAMA_URL
-              value: "http://ollama.kli-staging.svc.cluster.local:11434"
             - name: HSTS_ENABLED
               value: "false"
             - name: TRUSTED_PROXIES
