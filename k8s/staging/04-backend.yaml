@@ -62,6 +62,27 @@ spec:
               value: "10.0.0.0/8"
             - name: DB_SSLMODE
               value: "disable"
+            # App version — injected from ConfigMap (managed by ArgoCD/GitOps)
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: version
+            - name: APP_STATUS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: status
+            - name: APP_RELEASED
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: released
+            - name: APP_UPCOMING
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: upcoming
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
