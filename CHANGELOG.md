@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0](https://github.com/dannut/klist-infra/compare/v1.0.0...v2.0.0) (2026-03-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* update to version v2.0.0
+
+### Features
+
+* add Argo Rollouts dashboard ([5bad037](https://github.com/dannut/klist-infra/commit/5bad037abfe16a1b0a3ebc0a08983b6bf55ffdf1))
+* add Argo Rollouts dashboard ([956c48d](https://github.com/dannut/klist-infra/commit/956c48dbccd4ca6adb414a02c9999075d8a89f88))
+* update to version v2.0.0 ([227ba7f](https://github.com/dannut/klist-infra/commit/227ba7f2adb7a7d80856b10025af5f4802ee91eb))
+
+
+### Bug Fixes
+
+* add autoversioning ([f193ca9](https://github.com/dannut/klist-infra/commit/f193ca9a615b1e4e64fd09199f151c37c98fefc9))
+* add autoversioning ([15a1f60](https://github.com/dannut/klist-infra/commit/15a1f6094a12b3b3c47b3d0ccfe7b7b181709300))
+
 ## 1.0.0 (2026-03-21)
 
 
