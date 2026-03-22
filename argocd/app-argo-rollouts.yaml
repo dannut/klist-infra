@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kli-production
+  name: argo-rollouts-infra
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -9,14 +9,14 @@ spec:
   project: default
   source:
     repoURL: https://github.com/dannut/klist-infra
-    targetRevision: main
-    path: k8s/production
+    targetRevision: staging
+    path: k8s/argo-rollouts
   destination:
     server: https://kubernetes.default.svc
-    namespace: kli
+    namespace: argo-rollouts
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=false
