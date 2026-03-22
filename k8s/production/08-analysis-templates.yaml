@@ -1,0 +1,165 @@
+---
+# Smoke test pentru backend (Green) — rulează înainte de promote
+# Verifică că noul pod răspunde corect înainte să primească trafic real
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-smoke-test
+  namespace: kli
+spec:
+  args:
+    - name: preview-service
+  metrics:
+    - name: health-check
+      # Rulează o singură dată
+      count: 1
+      failureLimit: 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke-test
+                    image: curlimages/curl:latest
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        echo "Running smoke tests on Green (preview) backend..."
+                        
+                        # Test 1: Health endpoint
+                        echo "Test 1: Health check..."
+                        HEALTH=$(curl -sf --max-time 10 \
+                          http://{{args.preview-service}}.kli.svc.cluster.local:8080/api/health)
+                        echo "Health response: $HEALTH"
+                        echo "$HEALTH" | grep -q '"status":"UP"' || { echo "FAIL: health check"; exit 1; }
+                        
+                        # Test 2: Search endpoint (single word — SQL only, no Gemini)
+                        echo "Test 2: Search endpoint..."
+                        SEARCH=$(curl -sf --max-time 10 \
+                          "http://{{args.preview-service}}.kli.svc.cluster.local:8080/api/search?q=docker")
+                        echo "Search response length: ${#SEARCH}"
+                        echo "$SEARCH" | grep -q '\[' || { echo "FAIL: search returned no results"; exit 1; }
+                        
+                        # Test 3: Version endpoint
+                        echo "Test 3: Version endpoint..."
+                        VERSION=$(curl -sf --max-time 10 \
+                          http://{{args.preview-service}}.kli.svc.cluster.local:8080/api/version)
+                        echo "Version response: $VERSION"
+                        echo "$VERSION" | grep -q '"version"' || { echo "FAIL: version endpoint"; exit 1; }
+                        
+                        echo "All smoke tests PASSED ✅"
+
+---
+# Health check post-promote — monitorizează 10 minute după promote
+# Dacă eșuează → rollback automat la Blue
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-health-check
+  namespace: kli
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      # Verifică la fiecare 60 secunde timp de 10 minute (10 iterații)
+      interval: 60s
+      count: 10
+      # Permite maxim 2 eșecuri consecutive din 10
+      failureLimit: 2
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: health-check
+                    image: curlimages/curl:latest
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        HEALTH=$(curl -sf --max-time 5 \
+                          http://{{args.service-name}}.kli.svc.cluster.local:8080/api/health)
+                        echo "$HEALTH" | grep -q '"status":"UP"' || exit 1
+                        echo "Health OK: $HEALTH"
+
+---
+# Smoke test pentru frontend (Green) — rulează înainte de promote
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-smoke-test
+  namespace: kli
+spec:
+  args:
+    - name: preview-service
+  metrics:
+    - name: http-check
+      count: 1
+      failureLimit: 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 2
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: smoke-test
+                    image: curlimages/curl:latest
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        echo "Running smoke tests on Green (preview) frontend..."
+                        
+                        # Test 1: Health endpoint
+                        echo "Test 1: Nginx health..."
+                        curl -sf --max-time 10 \
+                          http://{{args.preview-service}}.kli.svc.cluster.local:8080/healthz \
+                          || { echo "FAIL: frontend health check"; exit 1; }
+                        
+                        # Test 2: Main page loads
+                        echo "Test 2: Main page..."
+                        BODY=$(curl -sf --max-time 10 \
+                          http://{{args.preview-service}}.kli.svc.cluster.local:8080/)
+                        echo "$BODY" | grep -q 'kli.st' || { echo "FAIL: main page missing kli.st"; exit 1; }
+                        
+                        echo "All frontend smoke tests PASSED ✅"
+
+---
+# Health check post-promote pentru frontend
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-health-check
+  namespace: kli
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      interval: 60s
+      count: 10
+      failureLimit: 2
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: health-check
+                    image: curlimages/curl:latest
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        curl -sf --max-time 5 \
+                          http://{{args.service-name}}.kli.svc.cluster.local:8080/healthz \
+                          || exit 1
+                        echo "Frontend health OK"

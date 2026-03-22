@@ -1,0 +1,164 @@
+---
+# Argo Rollout — Blue/Green strategy for kli-backend
+# Active service  → receives production traffic (kli.st)
+# Preview service → receives smoke test traffic before promotion
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: kli-backend
+  namespace: kli
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: kli-backend
+  template:
+    metadata:
+      labels:
+        app: kli-backend
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "kli-backend"
+        vault.hashicorp.com/agent-inject-secret-config: "kli/data/app"
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{- with secret "kli/data/app" -}}
+          export DB_HOST="{{ .Data.data.DB_HOST }}"
+          export DB_PORT="{{ .Data.data.DB_PORT }}"
+          export DB_USER="{{ .Data.data.DB_USER }}"
+          export DB_PASSWORD="{{ .Data.data.DB_PASSWORD }}"
+          export DB_NAME="{{ .Data.data.DB_NAME }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-redis: "kli/data/redis"
+        vault.hashicorp.com/agent-inject-template-redis: |
+          {{- with secret "kli/data/redis" -}}
+          export REDIS_PASSWORD="{{ .Data.data.REDIS_PASSWORD }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-gemini: "kli/data/gemini"
+        vault.hashicorp.com/agent-inject-template-gemini: |
+          {{- with secret "kli/data/gemini" -}}
+          export GEMINI_API_KEY="{{ .Data.data.GEMINI_API_KEY }}"
+          {{- end }}
+    spec:
+      serviceAccountName: kli-backend
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kli-backend
+          image: ghcr.io/dannut/klist-backend:latest
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - source /vault/secrets/config && source /vault/secrets/redis && source /vault/secrets/gemini && exec /kli-backend
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CORS_ORIGIN
+              value: "https://kli.st"
+            - name: REDIS_URL
+              value: "redis.kli.svc.cluster.local:6379"
+            - name: HSTS_ENABLED
+              value: "true"
+            - name: TRUSTED_PROXIES
+              value: "10.0.0.0/8"
+            - name: DB_SSLMODE
+              value: "disable"
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: version
+            - name: APP_STATUS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: status
+            - name: APP_RELEASED
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: released
+            - name: APP_UPCOMING
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: upcoming
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+  strategy:
+    blueGreen:
+      # Active service — production traffic
+      activeService: kli-backend-active
+      # Preview service — smoke test traffic
+      previewService: kli-backend-preview
+      # Auto-promote after smoke tests pass (AnalysisRun)
+      autoPromotionEnabled: false
+      # Run analysis before promotion
+      prePromotionAnalysis:
+        templates:
+          - templateName: backend-smoke-test
+        args:
+          - name: preview-service
+            value: kli-backend-preview
+      # Run analysis after promotion — rollback if fails
+      postPromotionAnalysis:
+        templates:
+          - templateName: backend-health-check
+        args:
+          - name: service-name
+            value: kli-backend-active
+      # Scale down old (blue) replica after 10 minutes
+      scaleDownDelaySeconds: 600
+
+---
+# Active service — receives production traffic from Ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: kli-backend-active
+  namespace: kli
+spec:
+  selector:
+    app: kli-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+---
+# Preview service — receives smoke test traffic
+apiVersion: v1
+kind: Service
+metadata:
+  name: kli-backend-preview
+  namespace: kli
+spec:
+  selector:
+    app: kli-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
