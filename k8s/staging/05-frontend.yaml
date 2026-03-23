@@ -22,9 +22,9 @@ spec:
       containers:
         - name: kli-frontend
 <<<<<<< HEAD
-          image: ghcr.io/dannut/klist-frontend:latest
+          image: ghcr.io/dannut/klist-frontend:staging-11c9a53
 =======
-          image: ghcr.io/dannut/klist-frontend:staging-d5026fa
+          image: ghcr.io/dannut/klist-frontend:staging-11c9a53
 >>>>>>> origin/staging
           imagePullPolicy: Always
           ports:
