@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.1](https://github.com/dannut/klist-infra/compare/v2.0.0...v2.0.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* add kli-backend service for nginx upstream resolution ([fdab3ec](https://github.com/dannut/klist-infra/commit/fdab3ec738ed21d0b1c44913d6a5bf1f626ba5c6))
+* nginx error ([6fcea47](https://github.com/dannut/klist-infra/commit/6fcea476ca30d5994e1e6307300f90d4c3747208))
+* nginx error ([796acde](https://github.com/dannut/klist-infra/commit/796acdee24a6a464cbffe6a5e04f4711c7288af9))
+* nginx error ([aee5b3e](https://github.com/dannut/klist-infra/commit/aee5b3ef1de9aa08bc58b49d5b50519516da2ab4))
+* repair rollouts dashboard ([5ec1853](https://github.com/dannut/klist-infra/commit/5ec18538c2c5d91a74f6dd2c1758f2a5f08399ec))
+* repair rollouts dashboard ([b737043](https://github.com/dannut/klist-infra/commit/b737043724d36d07c364458f4e381c7adc980a74))
+* repair rollouts dashboard ([4124aa4](https://github.com/dannut/klist-infra/commit/4124aa43528acb64f07cd63b10f103ca742cbeec))
+* repair rollouts dashboard ([ace91a9](https://github.com/dannut/klist-infra/commit/ace91a9245fe3ffcd182d95354501463d712a018))
+* resolve VERSION conflict ([7f20e31](https://github.com/dannut/klist-infra/commit/7f20e31052405834db1548af31d63d8cdf928158))
+
 ## [2.0.0](https://github.com/dannut/klist-infra/compare/v1.0.0...v2.0.0) (2026-03-22)
 
 
