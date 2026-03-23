@@ -61,6 +61,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: DB_HOST
+              value: "postgres"
             - name: CORS_ORIGIN
               value: "https://kli.st"
             - name: REDIS_URL
