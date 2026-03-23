@@ -21,11 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kli-frontend
-<<<<<<< HEAD
-          image: ghcr.io/dannut/klist-frontend:latest
-=======
-          image: ghcr.io/dannut/klist-frontend:staging-d5026fa
->>>>>>> origin/staging
+          image: ghcr.io/dannut/klist-frontend:staging-11c9a53
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
