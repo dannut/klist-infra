@@ -27,7 +27,7 @@ spec:
             - containerPort: 8080
           env:
             - name: BACKEND_URL
-              value: "kli-backend-staging"
+              value: "kli-backend"
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
