@@ -127,18 +127,18 @@ spec:
       autoPromotionEnabled: false
       # Run analysis before promotion
       #prePromotionAnalysis:
-        #templates:
-          #- templateName: backend-smoke-test
-        #args:
-          - name: preview-service
-            value: kli-backend-preview
+      #  templates:
+      #    - templateName: backend-smoke-test
+      #args:
+      #    - name: preview-service
+      #      value: kli-backend-preview
       # Run analysis after promotion — rollback if fails
       #postPromotionAnalysis:
-        #templates:
-          #- templateName: backend-health-check
-        args:
-          - name: service-name
-            value: kli-backend-active
+      #templates:
+      #- templateName: backend-health-check
+      #args:
+      #  - name: service-name
+      #    value: kli-backend-active
       # Scale down old (blue) replica after 10 minutes
       scaleDownDelaySeconds: 600
 

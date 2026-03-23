@@ -64,17 +64,17 @@ spec:
       previewService: kli-frontend-preview
       autoPromotionEnabled: false
       #prePromotionAnalysis:
-        #templates:
-          #- templateName: frontend-smoke-test
-        #args:
-          #- name: preview-service
-            #value: kli-frontend-preview
+      # templates:
+      # - templateName: frontend-smoke-test
+      # args:
+      # - name: preview-service
+      # value: kli-frontend-preview
       #postPromotionAnalysis:
-        #templates:
-          #- templateName: frontend-health-check
-        args:
-          - name: service-name
-            value: kli-frontend-active
+      #templates:
+      #- templateName: frontend-health-check
+      #args:
+      #  - name: service-name
+      #   value: kli-frontend-active
       scaleDownDelaySeconds: 600
 
 ---
