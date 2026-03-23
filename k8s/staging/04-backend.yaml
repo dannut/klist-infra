@@ -36,6 +36,8 @@ spec:
           export GEMINI_API_KEY="{{ .Data.data.GEMINI_API_KEY }}"
           {{- end }}
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: "master"
       serviceAccountName: kli-backend
       securityContext:
         runAsNonRoot: true
@@ -92,21 +94,21 @@ spec:
             httpGet:
               path: /api/health
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /api/health
               port: 8080
-            initialDelaySeconds: 15
+            initialDelaySeconds: 60
             periodSeconds: 20
           resources:
             requests:
               cpu: 50m
-              memory: 64Mi
+              memory: 128Mi
             limits:
               cpu: 500m
-              memory: 256Mi
+              memory: 512Mi
 
 ---
 apiVersion: v1
