@@ -162,3 +162,18 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
+
+---
+# Generic service — used by nginx.prod.conf proxy_pass
+# Points to the same pods as kli-backend-active
+apiVersion: v1
+kind: Service
+metadata:
+  name: kli-backend
+  namespace: kli
+spec:
+  selector:
+    app: kli-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
