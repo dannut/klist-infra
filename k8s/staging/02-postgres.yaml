@@ -35,6 +35,8 @@ spec:
           {{ .Data.data.DB_PASSWORD }}
           {{- end }}
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: "master"
       serviceAccountName: kli-backend
       securityContext:
         runAsNonRoot: true
