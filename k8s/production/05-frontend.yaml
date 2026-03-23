@@ -27,6 +27,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          env:
+            - name: BACKEND_URL
+              value: "kli-backend-active"
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
