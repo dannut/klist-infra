@@ -13,27 +13,35 @@ spec:
     metadata:
       labels:
         app: cloudflared
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-backend"
-        vault.hashicorp.com/agent-inject-secret-config.yaml: "kli/data/cloudflare"
-        vault.hashicorp.com/agent-inject-template-config.yaml: |
-          {{- with secret "kli/data/cloudflare" -}}
-          token: {{ .Data.data.TUNNEL_TOKEN }}
-          {{- end }}
     spec:
       serviceAccountName: kli-cloudflared
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: cloudflared
           image: cloudflare/cloudflared:latest
           args:
             - tunnel
             - --no-autoupdate
-            - "--protocol"
-            - "http2"
-            - --config
-            - /vault/secrets/config.yaml
+            - --protocol
+            - http2
             - run
+            - --token
+            - $(TUNNEL_TOKEN)
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-tunnel
+                  key: TUNNEL_TOKEN
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           resources:
             requests:
               cpu: 25m
