@@ -3,11 +3,12 @@ kind: Secret
 metadata:
   name: gcp-dr-cluster-secret
   namespace: argocd
+  annotations:
+    avp.kubernetes.io/vault-path: "kli/data/clusters/gcp-dr"
   labels:
     argocd.argoproj.io/secret-type: cluster
 type: Opaque
 stringData:
-  # Am schimbat 'secret/data/clusters' in 'kli/data/clusters'
   name: <path:kli/data/clusters/gcp-dr#name>
   server: <path:kli/data/clusters/gcp-dr#server>
   config: |
