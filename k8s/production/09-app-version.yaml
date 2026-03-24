@@ -8,19 +8,14 @@ data:
   status: "Production"
   released: |
     - version: "v2.0.0"
-      date: "March 2026"
-      tag: "stable"
       changelog:
         - "AI-powered semantic search"
         - "Improved search accuracy"
         - "Performance improvements"
     - version: "v1.0.0"
-      date: "March 2026"
-      tag: "stable"
       changelog:
         - "Initial public release"
         - "5000+ commands across 20 DevOps tools"
-        - "Web interface with full-text search"
         - "CLI tool kli for Linux & macOS"
   upcoming: |
     - feature: "Expand commands database"
