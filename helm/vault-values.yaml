@@ -1,0 +1,44 @@
+# HashiCorp Vault — Helm values pentru cluster kli.st
+# Instalare: helm upgrade --install vault hashicorp/vault -n vault -f helm/vault-values.yaml
+# Repo:      https://helm.releases.hashicorp.com
+
+server:
+  # Pinează vault-0 pe master — volumul Longhorn e atasat acolo
+  # IMPORTANT: nu șterge această restricție fără să muți mai întâi volumul
+  nodeSelector:
+    kubernetes.io/hostname: master
+
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: longhorn
+
+  # Autounseal via Vault Transit (configurat separat în vault-setup-production.sh)
+  # Dacă autounseal nu e configurat, Vault pornește sealed și trebuie unseal manual
+  ha:
+    enabled: false  # Single node — suficient pentru on-premise capstone
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # Prioritate ridicată — Vault trebuie să pornească înainte de podurile care cer secrete
+  priorityClassName: system-cluster-critical
+
+injector:
+  enabled: true
+
+  nodeSelector:
+    kubernetes.io/hostname: master
+
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 250m
