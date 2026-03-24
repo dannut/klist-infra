@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kli-gcp-dr
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dannut/klist-infra
+    targetRevision: staging
+    path: k8s/gcp-dr
+  destination:
+    server: https://34.12.166.61:6443
+    namespace: kli
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
