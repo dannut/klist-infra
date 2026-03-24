@@ -14,8 +14,6 @@ spec:
     # Urmăreste folderul argocd/ — orice Application adaugat aici
     # este detectat si aplicat automat de ArgoCD
     path: argocd
-    plugin: 
-      name: argocd-vault-plugin
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
