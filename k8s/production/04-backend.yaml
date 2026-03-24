@@ -31,7 +31,7 @@ spec:
       containers:
         - name: kli-backend
 
-          image: ghcr.io/dannut/klist-backend:2.0.0
+          image: ghcr.io/dannut/klist-backend:v2.1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
