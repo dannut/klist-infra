@@ -3,6 +3,8 @@ kind: Secret
 metadata:
   name: gcp-dr-cluster-secret
   namespace: argocd
+  annotations:
+    avp.kubernetes.io/vault-path: "kli/data/clusters/gcp-dr"
   labels:
     argocd.argoproj.io/secret-type: cluster
 type: Opaque
