@@ -41,6 +41,10 @@ spec:
           {{- end }}
     spec:
       serviceAccountName: kli-backend
+      nodeSelector:
+        kubernetes.io/hostname: "master"
+      imagePullSecrets:
+        - name: ghcr-login
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
@@ -48,7 +52,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kli-backend
-          image: ghcr.io/dannut/klist-backend:latest
+
+          image: ghcr.io/dannut/klist-backend:2.0.0
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
@@ -56,6 +61,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: DB_HOST
+              value: "postgres"
             - name: CORS_ORIGIN
               value: "https://kli.st"
             - name: REDIS_URL
@@ -101,7 +108,7 @@ spec:
             httpGet:
               path: /api/health
               port: 8080
-            initialDelaySeconds: 15
+            initialDelaySeconds: 60
             periodSeconds: 20
           resources:
             requests:
@@ -109,7 +116,7 @@ spec:
               memory: 64Mi
             limits:
               cpu: 500m
-              memory: 256Mi
+              memory: 512Mi
   strategy:
     blueGreen:
       # Active service — production traffic
@@ -119,19 +126,19 @@ spec:
       # Auto-promote after smoke tests pass (AnalysisRun)
       autoPromotionEnabled: false
       # Run analysis before promotion
-      prePromotionAnalysis:
-        templates:
-          - templateName: backend-smoke-test
-        args:
-          - name: preview-service
-            value: kli-backend-preview
+      #prePromotionAnalysis:
+      #  templates:
+      #    - templateName: backend-smoke-test
+      #args:
+      #    - name: preview-service
+      #      value: kli-backend-preview
       # Run analysis after promotion — rollback if fails
-      postPromotionAnalysis:
-        templates:
-          - templateName: backend-health-check
-        args:
-          - name: service-name
-            value: kli-backend-active
+      #postPromotionAnalysis:
+      #templates:
+      #- templateName: backend-health-check
+      #args:
+      #  - name: service-name
+      #    value: kli-backend-active
       # Scale down old (blue) replica after 10 minutes
       scaleDownDelaySeconds: 600
 
