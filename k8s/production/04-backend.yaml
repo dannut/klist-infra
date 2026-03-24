@@ -105,22 +105,19 @@ spec:
       activeService: kli-backend-active
       # Preview service — smoke test traffic
       previewService: kli-backend-preview
-      # Auto-promote after smoke tests pass (AnalysisRun)
       autoPromotionEnabled: false
-      # Run analysis before promotion
-      #prePromotionAnalysis:
-      #  templates:
-      #    - templateName: backend-smoke-test
-      #args:
-      #    - name: preview-service
-      #      value: kli-backend-preview
-      # Run analysis after promotion — rollback if fails
-      #postPromotionAnalysis:
-      #templates:
-      #- templateName: backend-health-check
-      #args:
-      #  - name: service-name
-      #    value: kli-backend-active
+      prePromotionAnalysis:
+        templates:
+          - templateName: backend-smoke-test
+        args:
+          - name: container
+            value: kli-backend
+      postPromotionAnalysis:
+        templates:
+          - templateName: backend-health-check
+        args:
+          - name: container
+            value: kli-backend
       # Scale down old (blue) replica after 10 minutes
       scaleDownDelaySeconds: 600
 
