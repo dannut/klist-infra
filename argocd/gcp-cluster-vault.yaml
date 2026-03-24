@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-dr-cluster-secret
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+type: Opaque
+stringData:
+  # Am schimbat 'secret/data/clusters' in 'kli/data/clusters'
+  name: <path:kli/data/clusters/gcp-dr#name>
+  server: <path:kli/data/clusters/gcp-dr#server>
+  config: |
+    {
+      "tlsClientConfig": {
+        "insecure": false,
+        "caData": "<path:kli/data/clusters/gcp-dr#caData>",
+        "certData": "<path:kli/data/clusters/gcp-dr#certData>",
+        "keyData": "<path:kli/data/clusters/gcp-dr#keyData>"
+      }
+    }

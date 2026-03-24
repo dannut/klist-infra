@@ -16,4 +16,15 @@ Thumbs.db
 *.swo
 
 # For dev branch, delete for staging.
-vault*
+*.sh
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+
+# Secrete și Kubeconfig
+gcp-kubeconfig.yml
+*.json
