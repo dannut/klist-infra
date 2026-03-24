@@ -1,6 +1,5 @@
 ---
 # Default deny: blochează tot traficul ingress+egress în namespace
-# Politicile de mai jos permit explicit doar ce e necesar
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -13,27 +12,7 @@ spec:
     - Egress
 
 ---
-# Permite tuturor pod-urilor acces la Vault
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-vault-egress
-  namespace: kli
-spec:
-  podSelector: {}
-  policyTypes:
-  - Egress
-  egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: vault
-    ports:
-    - protocol: TCP
-      port: 8200
-
----
-# DNS global
+# DNS global — toate pod-urile au nevoie de DNS
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -84,7 +63,7 @@ spec:
         - port: 8080
 
 ---
-# BACKEND: Primește de la Frontend, trimite la DB, Redis, Gemini API și Vault
+# BACKEND: Primește de la Frontend, trimite la DB, Redis și Gemini API
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -104,24 +83,12 @@ spec:
               app: kli-frontend
       ports:
         - port: 8080
-    # Permite smoke tests din AnalysisRun jobs
-    - from:
-        - podSelector:
-            matchLabels:
-              app: smoke-test
-      ports:
-        - port: 8080
   egress:
     - to: [{podSelector: {matchLabels: {app: postgres}}}]
       ports: [{port: 5432}]
     - to: [{podSelector: {matchLabels: {app: redis}}}]
       ports: [{port: 6379}]
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: vault
-      ports: [{port: 8200}]
-    # Gemini API
+    # Gemini API — doar HTTPS extern
     - ports:
         - port: 443
           protocol: TCP
