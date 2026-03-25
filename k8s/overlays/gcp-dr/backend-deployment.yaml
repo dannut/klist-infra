@@ -29,6 +29,17 @@ spec:
           envFrom:
             - secretRef:
                 name: kli-secrets
+          env:
+            - name: CORS_ORIGIN
+              value: "https://kli.st"
+            - name: REDIS_URL
+              value: "redis.kli.svc.cluster.local:6379"
+            - name: HSTS_ENABLED
+              value: "true"
+            - name: TRUSTED_PROXIES
+              value: "10.0.0.0/8"
+            - name: DB_SSLMODE
+              value: "disable"
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
