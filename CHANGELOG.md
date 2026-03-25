@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.1](https://github.com/dannut/klist-infra/compare/v2.1.0...v2.1.1) (2026-03-25)
+
+
+### Bug Fixes
+
+* replace curl smoke tests with Prometheus-based AnalysisTemplates ([d60dd99](https://github.com/dannut/klist-infra/commit/d60dd99dd33f793e8d72e09295ce35f0204e1e74))
+* security and bug fixes from code review ([7dbf60b](https://github.com/dannut/klist-infra/commit/7dbf60b92fdde0eb6def59a9839235de88bfe4c9))
+* update production image tags to v2.0.2 with v prefix ([e6715b9](https://github.com/dannut/klist-infra/commit/e6715b903d3d5fc629c2ccfac840418bfd3e762a))
+
 ## [2.1.0](https://github.com/dannut/klist-infra/compare/v2.0.2...v2.1.0) (2026-03-24)
 
 
