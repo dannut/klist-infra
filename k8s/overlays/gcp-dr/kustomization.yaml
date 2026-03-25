@@ -27,6 +27,7 @@ images:
 
   # GCP-DR cloudflared: plain K8s secret (key: token, not TUNNEL_TOKEN)
         # Gemini API — HTTPS external only
+        # Gemini API — HTTPS external only
 patches:
 - patch: |-
     $patch: delete
