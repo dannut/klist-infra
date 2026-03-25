@@ -12,9 +12,9 @@ images:
 - name: cloudflare/cloudflared
   newTag: latest
 - name: ghcr.io/dannut/klist-backend
-  newTag: v2.1.3
+  newTag: v2.1.5
 - name: ghcr.io/dannut/klist-frontend
-  newName: v2.1.5
+  newTag: v2.1.5
 
   # GCP-DR has no Vault — remove Vault egress network policy
 
