@@ -3,21 +3,20 @@ kind: ConfigMap
 metadata:
   name: app-version
 data:
-  version: "v1.0.0"
+  version: "v2.1.6"
   status: "Staging"
   released: |
-    - version: "v1.0.0"
-      date: "March 2026"
-      tag: "stable"
+    - version: "v2.1.6"
       changelog:
-        - "Initial public release"
-        - "5000+ commands across 20 DevOps tools"
-        - "Web interface with full-text search"
-        - "AI-powered semantic search via Gemini"
-        - "CLI tool kli for Linux & macOS"
+        - "Code quality improvements and bug fixes"
+        - "Semantic Release — automatic versioning"
+        - "Fetch timeout added to frontend API"
+    - version: "v2.1.5"
+      changelog:
+        - "Auto-promote dev to staging (Pipeline 1)"
+        - "Blue/Green deployment with Argo Rollouts"
+        - "GCP Disaster Recovery cluster"
   upcoming: |
-    - feature: "Blue/Green production deployment"
-      status: "In Progress"
     - feature: "Expand commands database"
       status: "Planned"
     - feature: "Dark mode"
