@@ -26,14 +26,6 @@ spec:
     metadata:
       labels:
         app: postgres
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-backend"
-        vault.hashicorp.com/agent-inject-secret-postgres: "kli/data/app"
-        vault.hashicorp.com/agent-inject-template-postgres: |
-          {{- with secret "kli/data/app" -}}
-          {{ .Data.data.DB_PASSWORD }}
-          {{- end }}
     spec:
       serviceAccountName: kli-backend
       securityContext:
@@ -52,8 +44,11 @@ spec:
               value: kli_db
             - name: POSTGRES_USER
               value: kli_user
-            - name: POSTGRES_PASSWORD_FILE
-              value: /vault/secrets/postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kli-app-secret
+                  key: DB_PASSWORD
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           securityContext:
