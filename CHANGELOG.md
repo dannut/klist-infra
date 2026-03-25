@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.1.0](https://github.com/dannut/klist-infra/compare/v2.0.2...v2.1.0) (2026-03-24)
+
+
+### Features
+
+* add cloudflared DR connector for GCP cluster ([22bd3f4](https://github.com/dannut/klist-infra/commit/22bd3f49c872024b899e9041f4268ba8880be3e8))
+* add GCP DR manifests and ArgoCD app ([c2f117b](https://github.com/dannut/klist-infra/commit/c2f117be606c02ba1dc7580560c10c5b380c479f))
+* migrate from Vault Agent Inject to Vault Secrets Operator ([3097e1c](https://github.com/dannut/klist-infra/commit/3097e1ce4be1beb348f94e0033f7e61571ff0986))
+* VSO migration + NetworkPolicies + GCP DR ([8270573](https://github.com/dannut/klist-infra/commit/82705735d17779a3042546ff918a477d6f35e5b7))
+
+
+### Bug Fixes
+
+* add default-deny NetworkPolicy for production and GCP DR ([f5d2938](https://github.com/dannut/klist-infra/commit/f5d2938c01e902679b7c00522ca60b8d7f937aca))
+* add kli-frontend-active service alias for cloudflare tunnel ([1479443](https://github.com/dannut/klist-infra/commit/14794433afa48be29813bab3694024c2e154eb70))
+* add vault helm values — pin to master node ([3f3d771](https://github.com/dannut/klist-infra/commit/3f3d771bf0df0d7a9b6c35ebfaf071ceb3f9f501))
+* correct backend service name for staging ([4582d29](https://github.com/dannut/klist-infra/commit/4582d292eb970729f430addba32d12aab975bfe0))
+* remove AVP plugin from root-app ([2b09907](https://github.com/dannut/klist-infra/commit/2b09907a87b4f00e0274db03bf51dbf638825256))
+* remove AVP plugin from root-app ([ea7e457](https://github.com/dannut/klist-infra/commit/ea7e457ffea990472bc9c027cb37d6ed328da8ad))
+* resolve conflicts and sync with main ([e105550](https://github.com/dannut/klist-infra/commit/e105550d8f0dd4895f5bdad902bd0b22462ff381))
+* resolve git conflict, rollback to 2.0.0 and add stability fixes ([cd6b7e5](https://github.com/dannut/klist-infra/commit/cd6b7e5c3b28ba84e297b427f2d55859c8c40238))
+* resolve git conflict, update to v2.0.2 and add stability fixes ([241e79c](https://github.com/dannut/klist-infra/commit/241e79c3bc8f59c15a8664b72058c9d7ff15e423))
+* smoketests ([381f2a3](https://github.com/dannut/klist-infra/commit/381f2a3b0b213833d24587644a3f6c0d279b14af))
+* smoketests ([3d040d9](https://github.com/dannut/klist-infra/commit/3d040d9c3710e4c852ccffdc333c6b35bae30da7))
+* unmarshal error ([5571e7d](https://github.com/dannut/klist-infra/commit/5571e7d1215ebb41d164008f0cd3f922732eaed1))
+
 ## [2.0.2](https://github.com/dannut/klist-infra/compare/v2.0.1...v2.0.2) (2026-03-23)
 
 
