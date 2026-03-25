@@ -14,9 +14,9 @@ resources:
 
 images:
 - name: ghcr.io/dannut/klist-backend
-  newName: v2.1.6
+  newTag: v2.1.5
 - name: ghcr.io/dannut/klist-frontend
-  newName: v2.1.6
+  newTag: v2.1.5
 
   # Production postgres uses VSO secret (kli-app-secret) — base already uses this secret name
   # Override PVC storage size to 5Gi (matches base default)
