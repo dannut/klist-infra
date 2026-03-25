@@ -1,0 +1,91 @@
+---
+# Pre-promotion smoke test — verifies Green pods are ready before promotion
+# Uses kube-state-metrics from Prometheus (no curl, no job pods)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-smoke-test
+spec:
+  args:
+    - name: container
+      value: kli-backend
+  metrics:
+    - name: pods-ready
+      # 3 checks × 20s = ~1 minute before promotion
+      interval: 20s
+      count: 3
+      failureLimit: 0
+      successCondition: result[0] >= 1
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            min(kube_pod_container_status_ready{namespace="kli",container="{{args.container}}"})
+
+---
+# Post-promotion health check — monitors 10 minutes after promotion
+# If restarts occur → automatic rollback to Blue
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-health-check
+spec:
+  args:
+    - name: container
+      value: kli-backend
+  metrics:
+    - name: no-restarts
+      # 10 checks × 60s = 10 minutes post-promotion
+      interval: 60s
+      count: 10
+      failureLimit: 2
+      successCondition: result[0] == 0
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            increase(kube_pod_container_status_restarts_total{namespace="kli",container="{{args.container}}"}[5m])
+
+---
+# Pre-promotion smoke test for frontend
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-smoke-test
+spec:
+  args:
+    - name: container
+      value: kli-frontend
+  metrics:
+    - name: pods-ready
+      interval: 20s
+      count: 3
+      failureLimit: 0
+      successCondition: result[0] >= 1
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            min(kube_pod_container_status_ready{namespace="kli",container="{{args.container}}"})
+
+---
+# Post-promotion health check for frontend
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-health-check
+spec:
+  args:
+    - name: container
+      value: kli-frontend
+  metrics:
+    - name: no-restarts
+      interval: 60s
+      count: 10
+      failureLimit: 2
+      successCondition: result[0] == 0
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            increase(kube_pod_container_status_restarts_total{namespace="kli",container="{{args.container}}"}[5m])

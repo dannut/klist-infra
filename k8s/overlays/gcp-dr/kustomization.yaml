@@ -1,0 +1,93 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kli
+
+resources:
+  - ../../base
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+
+images:
+  - name: ghcr.io/dannut/klist-backend
+    newTag: v2.1.3
+  - name: ghcr.io/dannut/klist-frontend
+    newTag: v2.1.3
+  - name: cloudflare/cloudflared
+    newTag: latest
+
+patches:
+  # GCP-DR has no Vault — remove Vault egress network policy
+  - patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-vault-egress
+    target:
+      kind: NetworkPolicy
+      name: allow-vault-egress
+
+  # GCP-DR backend network policy: no Vault egress rule
+  - patch: |-
+      - op: replace
+        path: /spec/egress
+        value:
+          - to: [{podSelector: {matchLabels: {app: postgres}}}]
+            ports: [{port: 5432}]
+          - to: [{podSelector: {matchLabels: {app: redis}}}]
+            ports: [{port: 6379}]
+          # Gemini API — HTTPS external only
+          - ports:
+              - port: 443
+                protocol: TCP
+    target:
+      kind: NetworkPolicy
+      name: allow-backend
+
+  # GCP-DR postgres: plain secret (kli-secrets) instead of VSO secret (kli-app-secret)
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/2
+        value:
+          name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kli-secrets
+              key: DB_PASSWORD
+    target:
+      kind: Deployment
+      name: postgres
+
+  # GCP-DR redis: plain secret (kli-secrets) + no serviceAccountName needed
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0
+        value:
+          name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kli-secrets
+              key: REDIS_PASSWORD
+      - op: replace
+        path: /spec/template/spec/containers/0/readinessProbe/exec/command
+        value:
+          - redis-cli
+          - ping
+    target:
+      kind: Deployment
+      name: redis
+
+  # GCP-DR cloudflared: plain K8s secret (key: token, not TUNNEL_TOKEN)
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0
+        value:
+          name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-tunnel
+              key: token
+    target:
+      kind: Deployment
+      name: cloudflared
