@@ -4,35 +4,3 @@ metadata:
   name: app-version
 data:
   version: "v2.1.6"
-  status: "Production"
-  released: |
-    - version: "v2.1.6"
-      changelog:
-        - "Code quality improvements and bug fixes"
-        - "Semantic Release — automatic versioning"
-        - "Fetch timeout added to frontend API"
-    - version: "v2.1.5"
-      changelog:
-        - "Auto-promote dev to staging (Pipeline 1)"
-        - "Blue/Green deployment with Argo Rollouts"
-        - "GCP Disaster Recovery cluster"
-    - version: "v2.1.3"
-      changelog:
-        - "Kustomize base+overlays restructure"
-    - version: "v2.0.0"
-      changelog:
-        - "AI-powered semantic search"
-        - "Improved search accuracy"
-        - "Performance improvements"
-    - version: "v1.0.0"
-      changelog:
-        - "Initial public release"
-        - "5000+ commands across 20 DevOps tools"
-        - "CLI tool kli for Linux & macOS"
-  upcoming: |
-    - feature: "Expand commands database"
-      status: "Planned"
-    - feature: "Dark mode"
-      status: "Planned"
-    - feature: "Browser extension"
-      status: "Planned"

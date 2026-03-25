@@ -4,22 +4,3 @@ metadata:
   name: app-version
 data:
   version: "v2.1.6"
-  status: "DR"
-  released: |
-    - version: "v2.1.6"
-      changelog:
-        - "Code quality improvements and bug fixes"
-        - "Semantic Release — automatic versioning"
-        - "Fetch timeout added to frontend API"
-    - version: "v2.1.5"
-      changelog:
-        - "Auto-promote dev to staging (Pipeline 1)"
-        - "Blue/Green deployment with Argo Rollouts"
-        - "GCP Disaster Recovery cluster"
-  upcoming: |
-    - feature: "Expand commands database"
-      status: "Planned"
-    - feature: "Dark mode"
-      status: "Planned"
-    - feature: "Browser extension"
-      status: "Planned"
