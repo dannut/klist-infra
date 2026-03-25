@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/dannut/klist-infra
     targetRevision: main
-    path: k8s/production
+    path: k8s/overlays/production
   destination:
     server: https://kubernetes.default.svc
     namespace: kli
