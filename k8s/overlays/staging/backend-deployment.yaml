@@ -1,0 +1,121 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kli-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kli-backend
+  template:
+    metadata:
+      labels:
+        app: kli-backend
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "kli-staging-backend"
+        vault.hashicorp.com/agent-inject-secret-config: "kli-staging/data/app"
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{- with secret "kli-staging/data/app" -}}
+          export DB_HOST="{{ .Data.data.DB_HOST }}"
+          export DB_PORT="{{ .Data.data.DB_PORT }}"
+          export DB_USER="{{ .Data.data.DB_USER }}"
+          export DB_PASSWORD="{{ .Data.data.DB_PASSWORD }}"
+          export DB_NAME="{{ .Data.data.DB_NAME }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-redis: "kli-staging/data/redis"
+        vault.hashicorp.com/agent-inject-template-redis: |
+          {{- with secret "kli-staging/data/redis" -}}
+          export REDIS_PASSWORD="{{ .Data.data.REDIS_PASSWORD }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-gemini: "kli-staging/data/gemini"
+        vault.hashicorp.com/agent-inject-template-gemini: |
+          {{- with secret "kli-staging/data/gemini" -}}
+          export GEMINI_API_KEY="{{ .Data.data.GEMINI_API_KEY }}"
+          {{- end }}
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: "master"
+      serviceAccountName: kli-backend
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kli-backend
+          image: ghcr.io/dannut/klist-backend:v2.1.3
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - source /vault/secrets/config && source /vault/secrets/redis && source /vault/secrets/gemini && exec /kli-backend
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CORS_ORIGIN
+              value: "https://test.kli.st"
+            - name: REDIS_URL
+              value: "redis.kli-staging.svc.cluster.local:6379"
+            - name: HSTS_ENABLED
+              value: "false"
+            - name: TRUSTED_PROXIES
+              value: "10.0.0.0/8"
+            - name: DB_SSLMODE
+              value: "disable"
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: version
+            - name: APP_STATUS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: status
+            - name: APP_RELEASED
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: released
+            - name: APP_UPCOMING
+              valueFrom:
+                configMapKeyRef:
+                  name: app-version
+                  key: upcoming
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kli-backend
+spec:
+  selector:
+    app: kli-backend
+  ports:
+    - port: 8080
+      targetPort: 8080

@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/dannut/klist-infra
     targetRevision: main
-    path: k8s/gcp-dr
+    path: k8s/overlays/gcp-dr
   destination:
     server: https://34.12.166.61:6443
     namespace: kli
