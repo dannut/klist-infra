@@ -11,6 +11,8 @@ spec:
       value: kli-backend
   metrics:
     - name: pods-ready
+      # Wait for Green pods to start and be scraped by Prometheus before first check
+      initialDelay: 30s
       # 3 checks × 20s = ~1 minute before promotion
       interval: 20s
       count: 3
@@ -58,6 +60,7 @@ spec:
       value: kli-frontend
   metrics:
     - name: pods-ready
+      initialDelay: 30s
       interval: 20s
       count: 3
       failureLimit: 0
