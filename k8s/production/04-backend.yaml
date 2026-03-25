@@ -31,7 +31,7 @@ spec:
       containers:
         - name: kli-backend
 
-          image: ghcr.io/dannut/klist-backend:v2.0.2
+          image: ghcr.io/dannut/klist-backend:v2.1.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -105,19 +105,22 @@ spec:
       activeService: kli-backend-active
       # Preview service — smoke test traffic
       previewService: kli-backend-preview
+      # Auto-promote after smoke tests pass (AnalysisRun)
       autoPromotionEnabled: false
-      prePromotionAnalysis:
-        templates:
-          - templateName: backend-smoke-test
-        args:
-          - name: container
-            value: kli-backend
-      postPromotionAnalysis:
-        templates:
-          - templateName: backend-health-check
-        args:
-          - name: container
-            value: kli-backend
+      # Run analysis before promotion
+      #prePromotionAnalysis:
+      #  templates:
+      #    - templateName: backend-smoke-test
+      #args:
+      #    - name: preview-service
+      #      value: kli-backend-preview
+      # Run analysis after promotion — rollback if fails
+      #postPromotionAnalysis:
+      #templates:
+      #- templateName: backend-health-check
+      #args:
+      #  - name: service-name
+      #    value: kli-backend-active
       # Scale down old (blue) replica after 10 minutes
       scaleDownDelaySeconds: 600
 

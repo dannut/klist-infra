@@ -4,23 +4,21 @@ metadata:
   name: app-version
   namespace: kli
 data:
-  version: "v2.0.0"
-  status: "Production"
+  version: "v2.1.2"
+  status: "production"
   released: |
-    - version: "v2.0.0"
-      changelog:
-        - "AI-powered semantic search"
-        - "Improved search accuracy"
-        - "Performance improvements"
-    - version: "v1.0.0"
-      changelog:
-        - "Initial public release"
-        - "5000+ commands across 20 DevOps tools"
-        - "CLI tool kli for Linux & macOS"
+    date: "March 2026"
+    tag: "stable"
+    changelog:
+      - "initial public release"
+      - "5000+ commands across 20 DevOps tools"
+      - "web interface with full-text search"
+      - "AI-powered semantic search via Gemini"
+      - "CLI tool kli for Linux & macOS"
   upcoming: |
-    - feature: "Expand commands database"
-      status: "Planned"
-    - feature: "Dark mode"
-      status: "Planned"
-    - feature: "Browser extension"
-      status: "Planned"
+    - feature: "expand commands database"
+      status: "in progress"
+    - feature: "dark mode"
+      status: "planned"
+    - feature: "browser extension"
+      status: "planned"
