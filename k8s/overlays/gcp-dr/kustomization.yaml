@@ -14,7 +14,7 @@ images:
 - name: ghcr.io/dannut/klist-backend
   newTag: v2.1.5
 - name: ghcr.io/dannut/klist-frontend
-  newTag: v2.1.5
+  newName: v2.1.6
 
   # GCP-DR has no Vault — remove Vault egress network policy
 
@@ -26,6 +26,7 @@ images:
   # GCP-DR redis: plain secret (kli-secrets) + no serviceAccountName needed
 
   # GCP-DR cloudflared: plain K8s secret (key: token, not TUNNEL_TOKEN)
+        # Gemini API — HTTPS external only
 patches:
 - patch: |-
     $patch: delete
