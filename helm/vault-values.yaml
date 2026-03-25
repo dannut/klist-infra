@@ -30,15 +30,6 @@ server:
   priorityClassName: system-cluster-critical
 
 injector:
-  enabled: true
-
-  nodeSelector:
-    kubernetes.io/hostname: master
-
-  resources:
-    requests:
-      memory: 64Mi
-      cpu: 50m
-    limits:
-      memory: 128Mi
-      cpu: 250m
+  # Disabled — replaced by Vault Secrets Operator (VSO)
+  # See helm/vso-values.yaml and k8s/production/00b-vso-auth.yaml
+  enabled: false

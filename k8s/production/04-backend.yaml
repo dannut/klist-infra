@@ -17,28 +17,6 @@ spec:
     metadata:
       labels:
         app: kli-backend
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-backend"
-        vault.hashicorp.com/agent-inject-secret-config: "kli/data/app"
-        vault.hashicorp.com/agent-inject-template-config: |
-          {{- with secret "kli/data/app" -}}
-          export DB_HOST="{{ .Data.data.DB_HOST }}"
-          export DB_PORT="{{ .Data.data.DB_PORT }}"
-          export DB_USER="{{ .Data.data.DB_USER }}"
-          export DB_PASSWORD="{{ .Data.data.DB_PASSWORD }}"
-          export DB_NAME="{{ .Data.data.DB_NAME }}"
-          {{- end }}
-        vault.hashicorp.com/agent-inject-secret-redis: "kli/data/redis"
-        vault.hashicorp.com/agent-inject-template-redis: |
-          {{- with secret "kli/data/redis" -}}
-          export REDIS_PASSWORD="{{ .Data.data.REDIS_PASSWORD }}"
-          {{- end }}
-        vault.hashicorp.com/agent-inject-secret-gemini: "kli/data/gemini"
-        vault.hashicorp.com/agent-inject-template-gemini: |
-          {{- with secret "kli/data/gemini" -}}
-          export GEMINI_API_KEY="{{ .Data.data.GEMINI_API_KEY }}"
-          {{- end }}
     spec:
       serviceAccountName: kli-backend
       nodeSelector:
@@ -53,13 +31,17 @@ spec:
       containers:
         - name: kli-backend
 
-          image: ghcr.io/dannut/klist-backend:2.0.0
+          image: ghcr.io/dannut/klist-backend:v2.0.2
           imagePullPolicy: Always
-          command: ["/bin/sh", "-c"]
-          args:
-            - source /vault/secrets/config && source /vault/secrets/redis && source /vault/secrets/gemini && exec /kli-backend
           ports:
             - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: kli-app-secret
+            - secretRef:
+                name: kli-redis-secret
+            - secretRef:
+                name: kli-gemini-secret
           env:
             - name: DB_HOST
               value: "postgres"
@@ -123,22 +105,19 @@ spec:
       activeService: kli-backend-active
       # Preview service — smoke test traffic
       previewService: kli-backend-preview
-      # Auto-promote after smoke tests pass (AnalysisRun)
       autoPromotionEnabled: false
-      # Run analysis before promotion
-      #prePromotionAnalysis:
-      #  templates:
-      #    - templateName: backend-smoke-test
-      #args:
-      #    - name: preview-service
-      #      value: kli-backend-preview
-      # Run analysis after promotion — rollback if fails
-      #postPromotionAnalysis:
-      #templates:
-      #- templateName: backend-health-check
-      #args:
-      #  - name: service-name
-      #    value: kli-backend-active
+      prePromotionAnalysis:
+        templates:
+          - templateName: backend-smoke-test
+        args:
+          - name: container
+            value: kli-backend
+      postPromotionAnalysis:
+        templates:
+          - templateName: backend-health-check
+        args:
+          - name: container
+            value: kli-backend
       # Scale down old (blue) replica after 10 minutes
       scaleDownDelaySeconds: 600
 

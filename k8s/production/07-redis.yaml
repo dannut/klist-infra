@@ -13,14 +13,6 @@ spec:
     metadata:
       labels:
         app: redis
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-backend"
-        vault.hashicorp.com/agent-inject-secret-redis: "kli/data/redis"
-        vault.hashicorp.com/agent-inject-template-redis: |
-          {{- with secret "kli/data/redis" -}}
-          {{ .Data.data.REDIS_PASSWORD }}
-          {{- end }}
     spec:
       serviceAccountName: kli-backend
       securityContext:
@@ -34,9 +26,15 @@ spec:
           command:
             - sh
             - -c
-            - redis-server --requirepass "$(cat /vault/secrets/redis)" --save "" --appendonly no
+            - redis-server --requirepass "$(REDIS_PASSWORD)" --save "" --appendonly no
           ports:
             - containerPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kli-redis-secret
+                  key: REDIS_PASSWORD
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -51,7 +49,7 @@ spec:
               memory: 256Mi
           readinessProbe:
             exec:
-              command: ["redis-cli", "ping"]
+              command: ["redis-cli", "-a", "$(REDIS_PASSWORD)", "ping"]
             initialDelaySeconds: 5
             periodSeconds: 10
 

@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kli-frontend
-          image: ghcr.io/dannut/klist-frontend:2.0.0
+          image: ghcr.io/dannut/klist-frontend:v2.0.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -36,9 +36,16 @@ spec:
               value: "kli-backend-active" 
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+          volumeMounts:
+            - name: nginx-tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
           readinessProbe:
             httpGet:
               path: /healthz
@@ -58,23 +65,30 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+      volumes:
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
   strategy:
     blueGreen:
       activeService: kli-frontend-active
       previewService: kli-frontend-preview
       autoPromotionEnabled: false
-      #prePromotionAnalysis:
-      # templates:
-      # - templateName: frontend-smoke-test
-      # args:
-      # - name: preview-service
-      # value: kli-frontend-preview
-      #postPromotionAnalysis:
-      #templates:
-      #- templateName: frontend-health-check
-      #args:
-      #  - name: service-name
-      #   value: kli-frontend-active
+      prePromotionAnalysis:
+        templates:
+          - templateName: frontend-smoke-test
+        args:
+          - name: container
+            value: kli-frontend
+      postPromotionAnalysis:
+        templates:
+          - templateName: frontend-health-check
+        args:
+          - name: container
+            value: kli-frontend
       scaleDownDelaySeconds: 600
 
 ---
