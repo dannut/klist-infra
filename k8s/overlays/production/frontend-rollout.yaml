@@ -92,7 +92,7 @@ spec:
         args:
           - name: container
             value: kli-frontend
-      scaleDownDelaySeconds: 600
+      scaleDownDelaySeconds: 120
 
 ---
 # Active service — production traffic

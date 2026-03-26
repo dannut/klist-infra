@@ -15,9 +15,9 @@ resources:
 
 images:
 - name: ghcr.io/dannut/klist-backend
-  newTag: v2.1.6
+  newTag: v2.1.7
 - name: ghcr.io/dannut/klist-frontend
-  newTag: v2.1.6
+  newTag: v2.1.7
 
   # Production postgres uses VSO secret (kli-app-secret) — base already uses this secret name
   # Override PVC storage size to 5Gi (matches base default)
@@ -29,3 +29,11 @@ patches:
   target:
     kind: PersistentVolumeClaim
     name: postgres-pvc
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: master
+  target:
+    kind: Deployment
+    name: postgres
