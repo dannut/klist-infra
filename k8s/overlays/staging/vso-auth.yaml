@@ -1,0 +1,92 @@
+---
+# VaultConnection — Vault address for namespace kli-staging
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+  namespace: kli-staging
+spec:
+  address: http://vault.vault.svc.cluster.local:8200
+
+---
+# VaultAuth — Kubernetes authentication
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: kli-staging-auth
+  namespace: kli-staging
+spec:
+  vaultConnectionRef: vault-connection
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: kli-staging-backend
+    serviceAccount: kli-backend
+
+---
+# VaultStaticSecret — DB + app config → kli-app-secret
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: kli-app-secret
+  namespace: kli-staging
+spec:
+  vaultAuthRef: kli-staging-auth
+  mount: kli-staging
+  type: kv-v2
+  path: app
+  destination:
+    name: kli-app-secret
+    create: true
+  refreshAfter: 1h
+
+---
+# VaultStaticSecret — Redis password → kli-redis-secret
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: kli-redis-secret
+  namespace: kli-staging
+spec:
+  vaultAuthRef: kli-staging-auth
+  mount: kli-staging
+  type: kv-v2
+  path: redis
+  destination:
+    name: kli-redis-secret
+    create: true
+  refreshAfter: 1h
+
+---
+# VaultStaticSecret — Gemini API key → kli-gemini-secret
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: kli-gemini-secret
+  namespace: kli-staging
+spec:
+  vaultAuthRef: kli-staging-auth
+  mount: kli-staging
+  type: kv-v2
+  path: gemini
+  destination:
+    name: kli-gemini-secret
+    create: true
+  refreshAfter: 1h
+
+---
+# VaultStaticSecret — Cloudflare tunnel token → cloudflare-tunnel
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultStaticSecret
+metadata:
+  name: cloudflare-tunnel
+  namespace: kli-staging
+spec:
+  vaultAuthRef: kli-staging-auth
+  mount: kli-staging
+  type: kv-v2
+  path: cloudflare
+  destination:
+    name: cloudflare-tunnel
+    create: true
+  refreshAfter: 24h

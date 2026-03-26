@@ -7,7 +7,7 @@ resources:
 - ../../base
 - backend-deployment.yaml
 - frontend-deployment.yaml
-- vault-config.yaml
+- vso-auth.yaml
 - app-version.yaml
 - ingress.yaml
 
@@ -19,23 +19,7 @@ images:
 - name: ghcr.io/dannut/klist-frontend
   newTag: staging-31c55c4
 
-  # Staging namespace is kli-staging — vault-config lives in vault namespace, exclude from namespace override
-
-  # Staging PVC: 2Gi instead of base 5Gi
-
-  # Staging postgres: Vault Agent Inject annotations + POSTGRES_PASSWORD_FILE instead of secretKeyRef
-
-  # Staging redis: Vault Agent Inject annotations + read password from vault file
-
-  # Staging cloudflared: Vault Agent Inject for tunnel token via config file
 patches:
-- patch: |-
-    - op: replace
-      path: /metadata/namespace
-      value: vault
-  target:
-    kind: ConfigMap
-    name: vault-config
 - patch: |-
     - op: replace
       path: /spec/resources/requests/storage
@@ -45,74 +29,9 @@ patches:
     name: postgres-pvc
 - patch: |-
     - op: add
-      path: /spec/template/metadata/annotations
-      value:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-staging-backend"
-        vault.hashicorp.com/agent-inject-secret-postgres: "kli-staging/data/app"
-        vault.hashicorp.com/agent-inject-template-postgres: |
-          {{- with secret "kli-staging/data/app" -}}
-          {{ .Data.data.DB_PASSWORD }}
-          {{- end }}
-    - op: add
       path: /spec/template/spec/nodeSelector
       value:
         kubernetes.io/hostname: "master"
-    - op: replace
-      path: /spec/template/spec/containers/0/env/2
-      value:
-        name: POSTGRES_PASSWORD_FILE
-        value: /vault/secrets/postgres
   target:
     kind: Deployment
     name: postgres
-- patch: |-
-    - op: add
-      path: /spec/template/metadata/annotations
-      value:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-staging-backend"
-        vault.hashicorp.com/agent-inject-secret-redis: "kli-staging/data/redis"
-        vault.hashicorp.com/agent-inject-template-redis: |
-          {{- with secret "kli-staging/data/redis" -}}
-          {{ .Data.data.REDIS_PASSWORD }}
-          {{- end }}
-    - op: replace
-      path: /spec/template/spec/containers/0/command
-      value:
-        - sh
-        - -c
-        - redis-server --requirepass "$(cat /vault/secrets/redis)" --save "" --appendonly no
-    - op: remove
-      path: /spec/template/spec/containers/0/env
-  target:
-    kind: Deployment
-    name: redis
-- patch: |-
-    - op: add
-      path: /spec/template/metadata/annotations
-      value:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "kli-staging-backend"
-        vault.hashicorp.com/agent-inject-secret-config.yaml: "kli-staging/data/cloudflare"
-        vault.hashicorp.com/agent-inject-template-config.yaml: |
-          {{- with secret "kli-staging/data/cloudflare" -}}
-          token: {{ .Data.data.TUNNEL_TOKEN }}
-          {{- end }}
-    - op: replace
-      path: /spec/template/spec/containers/0/args
-      value:
-        - tunnel
-        - --no-autoupdate
-        - "--protocol"
-        - "http2"
-        - --config
-        - /vault/secrets/config.yaml
-        - run
-    - op: remove
-      path: /spec/template/spec/containers/0/env
-    - op: remove
-      path: /spec/template/spec/securityContext/seccompProfile
-  target:
-    kind: Deployment
-    name: cloudflared
