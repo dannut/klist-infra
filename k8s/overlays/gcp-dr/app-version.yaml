@@ -3,7 +3,4 @@ kind: ConfigMap
 metadata:
   name: app-version
 data:
-  version: "v2.1.6"
-  status: "DR"
-  released: ""
-  upcoming: ""
+  version: "v2.1.7"
