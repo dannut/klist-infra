@@ -29,3 +29,11 @@ patches:
   target:
     kind: PersistentVolumeClaim
     name: postgres-pvc
+- patch: |-
+    - op: add
+      path: /spec/template/spec/nodeSelector
+      value:
+        kubernetes.io/hostname: master
+  target:
+    kind: Deployment
+    name: postgres

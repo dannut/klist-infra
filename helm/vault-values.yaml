@@ -13,8 +13,29 @@ server:
     size: 10Gi
     storageClass: longhorn
 
-  # Autounseal via Vault Transit (configurat separat în vault-setup-production.sh)
-  # Dacă autounseal nu e configurat, Vault pornește sealed și trebuie unseal manual
+  # Autounseal via Vault Transit
+  config: |
+    ui = true
+
+    listener "tcp" {
+      tls_disable = 1
+      address = "[::]:8200"
+      cluster_address = "[::]:8201"
+    }
+
+    storage "file" {
+      path = "/vault/data"
+    }
+
+    seal "transit" {
+      address    = "http://10.0.10.20:8205"
+      key_name   = "autounseal-key"
+      mount_path = "transit/"
+      tls_disable = "true"
+    }
+
+    disable_mlock = true
+
   ha:
     enabled: false  # Single node — suficient pentru on-premise capstone
 
