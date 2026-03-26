@@ -4,3 +4,6 @@ metadata:
   name: app-version
 data:
   version: "v2.1.6"
+  status: "Staging"
+  released: ""
+  upcoming: ""
