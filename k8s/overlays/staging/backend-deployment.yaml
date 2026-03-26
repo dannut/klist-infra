@@ -68,21 +68,6 @@ spec:
                 configMapKeyRef:
                   name: app-version
                   key: version
-            - name: APP_STATUS
-              valueFrom:
-                configMapKeyRef:
-                  name: app-version
-                  key: status
-            - name: APP_RELEASED
-              valueFrom:
-                configMapKeyRef:
-                  name: app-version
-                  key: released
-            - name: APP_UPCOMING
-              valueFrom:
-                configMapKeyRef:
-                  name: app-version
-                  key: upcoming
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

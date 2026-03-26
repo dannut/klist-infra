@@ -15,9 +15,9 @@ images:
 - name: cloudflare/cloudflared
   newTag: latest
 - name: ghcr.io/dannut/klist-backend
-  newTag: staging-9654ef5
+  newTag: staging-f169082
 - name: ghcr.io/dannut/klist-frontend
-  newTag: staging-0b4e844
+  newTag: staging-31c55c4
 
   # Staging namespace is kli-staging — vault-config lives in vault namespace, exclude from namespace override
 
