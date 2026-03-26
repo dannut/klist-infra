@@ -15,7 +15,7 @@ images:
 - name: ghcr.io/dannut/klist-backend
   newTag: v2.1.7
 - name: ghcr.io/dannut/klist-frontend
-  newTag: v2.1.6
+  newTag: v2.1.7
 
   # GCP-DR has no Vault — remove Vault egress network policy
 
