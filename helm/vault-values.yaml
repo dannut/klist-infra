@@ -55,6 +55,22 @@ server:
   # Prioritate ridicată — Vault trebuie să pornească înainte de podurile care cer secrete
   priorityClassName: system-cluster-critical
 
+  # Așteaptă vault-ul mic (transit seal) înainte să pornească
+  # Fără asta, vault-0 pornește, nu găsește transit-ul, iese cu Completed și se repornește
+  extraInitContainers:
+    - name: wait-for-transit
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for transit vault at 10.0.10.20:8205..."
+          until nc -z 10.0.10.20 8205; do
+            echo "Transit vault not ready, retrying in 5s..."
+            sleep 5
+          done
+          echo "Transit vault is ready."
+
 injector:
   # Disabled — replaced by Vault Secrets Operator (VSO)
   # See helm/vso-values.yaml and k8s/production/00b-vso-auth.yaml
