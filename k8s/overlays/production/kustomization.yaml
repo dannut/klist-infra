@@ -11,6 +11,7 @@ resources:
 - analysis-templates.yaml
 - app-version.yaml
 - ingress.yaml
+- alerts.yaml
 
 images:
 - name: ghcr.io/dannut/klist-backend
