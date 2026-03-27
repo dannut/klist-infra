@@ -13,7 +13,7 @@ images:
 - name: cloudflare/cloudflared
   newTag: latest
 - name: ghcr.io/dannut/klist-backend
-  newTag: v2.1.8
+  newTag: v2.1.9
 - name: ghcr.io/dannut/klist-frontend
   newTag: v2.1.8
 
@@ -27,6 +27,7 @@ images:
   # GCP-DR redis: plain secret (kli-secrets) + no serviceAccountName needed
 
   # GCP-DR cloudflared: plain K8s secret (key: token, not TUNNEL_TOKEN)
+        # Gemini API — HTTPS external only
         # Gemini API — HTTPS external only
         # Gemini API — HTTPS external only
         # Gemini API — HTTPS external only
