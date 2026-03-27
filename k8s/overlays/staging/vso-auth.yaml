@@ -38,7 +38,7 @@ spec:
   destination:
     name: kli-app-secret
     create: true
-  refreshAfter: 1h
+  refreshAfter: 5m
 
 ---
 # VaultStaticSecret — Redis password → kli-redis-secret
@@ -55,7 +55,7 @@ spec:
   destination:
     name: kli-redis-secret
     create: true
-  refreshAfter: 1h
+  refreshAfter: 5m
 
 ---
 # VaultStaticSecret — Gemini API key → kli-gemini-secret
@@ -72,7 +72,7 @@ spec:
   destination:
     name: kli-gemini-secret
     create: true
-  refreshAfter: 1h
+  refreshAfter: 5m
 
 ---
 # VaultStaticSecret — Cloudflare tunnel token → cloudflare-tunnel

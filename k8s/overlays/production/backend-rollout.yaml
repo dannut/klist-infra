@@ -8,7 +8,7 @@ metadata:
   name: kli-backend
 spec:
   replicas: 2
-  revisionHistoryLimit: 3
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: kli-backend
