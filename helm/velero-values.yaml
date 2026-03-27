@@ -1,0 +1,71 @@
+# Velero — Helm values pentru backup GCS
+# Repo: https://vmware-tanzu.github.io/helm-charts
+# Instalare:
+#   kubectl create namespace velero
+#   kubectl create secret generic velero-gcs-credentials \
+#     --from-file=cloud=./gcs-key.json -n velero
+#   helm upgrade --install velero vmware-tanzu/velero -n velero -f helm/velero-values.yaml
+
+initContainers:
+  - name: velero-plugin-for-gcp
+    image: velero/velero-plugin-for-gcp:v1.11.0
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: gcp
+      bucket: klist-velero-backups
+      default: true
+
+  volumeSnapshotLocation:
+    - name: default
+      provider: gcp
+      config:
+        project: project-092a68fd-42f4-4f6a-8fb
+
+  defaultVolumesToFsBackup: true
+  uploaderType: kopia
+
+credentials:
+  useSecret: true
+  existingSecret: velero-gcs-credentials
+
+deployNodeAgent: true
+
+nodeAgent:
+  tolerations:
+    - operator: Exists
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+schedules:
+  daily-full:
+    disabled: false
+    schedule: "0 2 * * *"
+    template:
+      ttl: "720h"
+      includedNamespaces:
+        - kli
+        - kli-staging
+        - vault
+        - argo-rollouts
+        - argocd
+      defaultVolumesToFsBackup: true
+      storageLocation: default
