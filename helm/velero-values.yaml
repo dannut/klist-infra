@@ -58,7 +58,7 @@ resources:
 schedules:
   daily-full:
     disabled: false
-    schedule: "0 2 * * *"
+    schedule: "0 19 * * *"
     template:
       ttl: "720h"
       includedNamespaces:
