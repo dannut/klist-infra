@@ -1,47 +1,32 @@
 # ── GCS Backup Bucket ─────────────────────────────────────────────────────────
+# Bucket activ pentru Velero — creat manual, importat în terraform state
 
 resource "google_storage_bucket" "klist_backups" {
-  name          = "klist-backups-${var.project_id}"
-  location      = var.region
+  name          = "klist-velero-backups"
+  location      = "EU"
   force_destroy = false
 
-  # Versioning — păstrează istoric obiectelor
-  versioning {
-    enabled = true
-  }
-
-  # Lifecycle — șterge automat backup-urile mai vechi de 3 zile
-  lifecycle_rule {
-    condition {
-      age = 3
-    }
-    action {
-      type = "Delete"
-    }
-  }
-
-  # Retenție uniformă la nivel de bucket
   uniform_bucket_level_access = true
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [location, lifecycle_rule, versioning, soft_delete_policy]
+  }
 }
 
-# ── Service Account pentru backup (Velero + pg_dump) ──────────────────────────
+# ── Service Account pentru backup (Velero) ────────────────────────────────────
 
 resource "google_service_account" "backup" {
   account_id   = "klist-backup-sa"
   display_name = "kli.st Backup Service Account"
-  description  = "Folosit de Velero si pg_dump CronJob pentru acces la GCS"
+  description  = "Folosit de Velero pentru acces la GCS"
 }
 
-# Permisiuni pe bucket — objectAdmin permite read/write/delete obiecte
+# Permisiuni pe bucket — storage.admin permite read/write/delete obiecte
 resource "google_storage_bucket_iam_member" "backup_sa_access" {
   bucket = google_storage_bucket.klist_backups.name
-  role   = "roles/storage.objectAdmin"
+  role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.backup.email}"
-}
-
-# Cheie JSON pentru service account — folosita ca K8s secret
-resource "google_service_account_key" "backup" {
-  service_account_id = google_service_account.backup.name
 }
 
 # ── Outputs ───────────────────────────────────────────────────────────────────
@@ -54,10 +39,4 @@ output "backup_bucket_name" {
 output "backup_sa_email" {
   description = "Email-ul service account-ului pentru backup"
   value       = google_service_account.backup.email
-}
-
-output "backup_sa_key_base64" {
-  description = "Cheia JSON a service account-ului (base64) — folosita ca K8s secret"
-  value       = google_service_account_key.backup.private_key
-  sensitive   = true
 }

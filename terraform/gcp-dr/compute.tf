@@ -23,6 +23,10 @@ resource "google_compute_instance" "k3s_master" {
       --disable servicelb \
       --node-external-ip=$(curl -s ifconfig.me)
   EOF
+
+  lifecycle {
+    ignore_changes = [metadata_startup_script, metadata]
+  }
 }
 
 # ---- WORKER NODE (SPOT INSTANCE) ----
@@ -54,9 +58,13 @@ resource "google_compute_instance" "k3s_worker" {
   metadata_startup_script = <<-EOF
     #!/bin/bash
     # Așteptăm câteva secunde să fim siguri că masterul a pornit complet
-    sleep 30 
+    sleep 30
     curl -sfL https://get.k3s.io | K3S_URL=https://${google_compute_instance.k3s_master.network_interface.0.network_ip}:6443 K3S_TOKEN=${random_password.k3s_cluster_token.result} sh -s - agent
   EOF
 
   depends_on = [google_compute_instance.k3s_master]
+
+  lifecycle {
+    ignore_changes = [metadata_startup_script, metadata]
+  }
 }
