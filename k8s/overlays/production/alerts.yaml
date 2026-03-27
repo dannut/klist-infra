@@ -1,0 +1,65 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kli-alerts
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: kli.rules
+      rules:
+
+        - alert: KliBackendDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace="kli", deployment=~"kli-backend.*"} == 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend kli.st DOWN"
+            description: "Niciun pod kli-backend nu este disponibil in namespace kli."
+
+        - alert: KliFrontendDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace="kli", deployment=~"kli-frontend.*"} == 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Frontend kli.st DOWN"
+            description: "Niciun pod kli-frontend nu este disponibil in namespace kli."
+
+        - alert: KliPodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="kli"}[5m]) > 3
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} in CrashLoopBackOff"
+            description: "Podul {{ $labels.pod }} a restartat de mai mult de 3 ori in ultimele 5 minute."
+
+        - alert: KliHighMemory
+          expr: |
+            (
+              container_memory_working_set_bytes{namespace="kli", container!=""}
+              /
+              kube_pod_container_resource_limits{namespace="kli", resource="memory", container!=""}
+            ) > 0.85
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Memorie ridicata {{ $labels.pod }}"
+            description: "Containerul {{ $labels.container }} din {{ $labels.pod }} foloseste peste 85% din limita de memorie."
+
+        - alert: KliPostgresDown
+          expr: |
+            kube_deployment_status_replicas_available{namespace="kli", deployment="postgres"} == 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PostgreSQL kli.st DOWN"
+            description: "Podul PostgreSQL nu este disponibil in namespace kli."
