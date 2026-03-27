@@ -60,7 +60,7 @@ schedules:
     disabled: false
     schedule: "0 19 * * *"
     template:
-      ttl: "720h"
+      ttl: "120h"
       includedNamespaces:
         - kli
         - kli-staging
