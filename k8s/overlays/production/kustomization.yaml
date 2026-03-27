@@ -15,7 +15,7 @@ resources:
 
 images:
 - name: ghcr.io/dannut/klist-backend
-  newTag: v2.1.8
+  newTag: v2.1.9
 - name: ghcr.io/dannut/klist-frontend
   newTag: v2.1.8
 
