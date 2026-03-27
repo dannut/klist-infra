@@ -39,7 +39,7 @@ server:
         token      = "REPLACE_WITH_TRANSIT_TOKEN"
       }
 
-      disable_mlock = true
+      disable_mlock = false
 
   ha:
     enabled: false  # Single node — suficient pentru on-premise capstone
@@ -51,6 +51,15 @@ server:
     limits:
       memory: 512Mi
       cpu: 500m
+
+  # IPC_LOCK necesar pentru disable_mlock = false
+  # Permite Vault să blocheze memoria și să prevină paginarea secretelor pe disk
+  extraContainerEnvironmentVars: {}
+  statefulSet:
+    securityContext:
+      container:
+        capabilities:
+          add: ["IPC_LOCK"]
 
   # Prioritate ridicată — Vault trebuie să pornească înainte de podurile care cer secrete
   priorityClassName: system-cluster-critical
