@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: discord-receiver
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: kli
+spec:
+  route:
+    receiver: discord
+    matchers:
+      - name: namespace
+        value: kli
+  receivers:
+    - name: discord
+      discordConfigs:
+        - webhookURL:
+            key: webhook_url
+            name: alertmanager-discord
+          title: '{{ .GroupLabels.alertname }}'
+          message: |
+            {{ range .Alerts }}
+            **{{ .Status | toUpper }}** — {{ .Annotations.summary }}
+            {{ .Annotations.description }}
+            {{ end }}
