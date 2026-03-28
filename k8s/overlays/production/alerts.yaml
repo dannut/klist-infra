@@ -12,7 +12,7 @@ spec:
 
         - alert: KliBackendDown
           expr: |
-            absent(kube_pod_status_ready{namespace="kli", pod=~"kli-backend.*", condition="true"})
+            sum(kube_pod_status_ready{namespace="kli", pod=~"kli-backend.*", condition="true"}) == 0
           for: 0m
           labels:
             severity: critical
@@ -22,7 +22,7 @@ spec:
 
         - alert: KliFrontendDown
           expr: |
-            absent(kube_pod_status_ready{namespace="kli", pod=~"kli-frontend.*", condition="true"})
+            sum(kube_pod_status_ready{namespace="kli", pod=~"kli-frontend.*", condition="true"}) == 0
           for: 0m
           labels:
             severity: critical
@@ -56,7 +56,7 @@ spec:
 
         - alert: KliPostgresDown
           expr: |
-            absent(kube_pod_status_ready{namespace="kli", pod=~"postgres.*", condition="true"})
+            sum(kube_pod_status_ready{namespace="kli", pod=~"postgres.*", condition="true"}) == 0
           for: 0m
           labels:
             severity: critical

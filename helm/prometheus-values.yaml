@@ -40,10 +40,19 @@ grafana:
     type: NodePort
   nodeSelector:
     kubernetes.io/hostname: master
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeProxy: false
+
 prometheus:
   prometheusSpec:
     nodeSelector:
       kubernetes.io/hostname: master
+    scrapeInterval: "1s"
+    evaluationInterval: "1s"
     retention: 15d
     storageSpec:
       volumeClaimTemplate:
