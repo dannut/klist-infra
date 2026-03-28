@@ -20,14 +20,13 @@ alertmanager:
     receivers:
       - name: blackhole
       - name: discord
-        discord_configs:
-          - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/webhook_url
+        slack_configs:
+          - api_url: 'REPLACE_WITH_SLACK_WEBHOOK'
+            channel: '#alerts'
             title: '{{ .GroupLabels.alertname }}'
-            message: |
-              {{ range .Alerts }}
-              **{{ .Status | toUpper }}** — {{ .Annotations.summary }}
-              {{ .Annotations.description }}
-              {{ end }}
+            text: |
+              {{ range .Alerts }}*{{ .Status | toUpper }}* — {{ .Annotations.summary }}
+              {{ .Annotations.description }}{{ end }}
     inhibit_rules:
       - source_matchers:
           - severity = critical
