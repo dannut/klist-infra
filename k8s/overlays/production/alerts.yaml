@@ -12,7 +12,7 @@ spec:
 
         - alert: KliBackendDown
           expr: |
-            kube_deployment_status_replicas_available{namespace="kli", deployment=~"kli-backend.*"} == 0
+            absent(kube_pod_status_ready{namespace="kli", pod=~"kli-backend.*", condition="true"})
           for: 0m
           labels:
             severity: critical
@@ -22,7 +22,7 @@ spec:
 
         - alert: KliFrontendDown
           expr: |
-            kube_deployment_status_replicas_available{namespace="kli", deployment=~"kli-frontend.*"} == 0
+            absent(kube_pod_status_ready{namespace="kli", pod=~"kli-frontend.*", condition="true"})
           for: 0m
           labels:
             severity: critical
@@ -56,7 +56,7 @@ spec:
 
         - alert: KliPostgresDown
           expr: |
-            kube_deployment_status_replicas_available{namespace="kli", deployment="postgres"} == 0
+            absent(kube_pod_status_ready{namespace="kli", pod=~"postgres.*", condition="true"})
           for: 0m
           labels:
             severity: critical
