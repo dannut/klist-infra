@@ -13,7 +13,7 @@ images:
 - name: cloudflare/cloudflared
   newTag: latest
 - name: ghcr.io/dannut/klist-backend
-  newTag: v2.1.9
+  newTag: v2.1.10
 - name: ghcr.io/dannut/klist-frontend
   newTag: v2.1.10
 

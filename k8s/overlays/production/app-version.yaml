@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: app-version
 data:
-  version: "v2.1.9"
+  version: "v2.1.10"
