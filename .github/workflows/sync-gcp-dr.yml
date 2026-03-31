@@ -10,10 +10,9 @@ env:
 jobs:
 
   sync-gcp-dr:
-    name: Wait for rollout → Sync GCP-DR
+    name: Wait for rollout - Sync GCP-DR
     runs-on: ubuntu-latest
-    # Only run on deploy commits, not on manual infra changes
-    if: startsWith(github.event.head_commit.message, 'ci: deploy')
+    if: "startsWith(github.event.head_commit.message, 'ci: deploy')"
     steps:
 
       - uses: actions/checkout@v6
