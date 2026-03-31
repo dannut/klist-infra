@@ -1,0 +1,98 @@
+name: Sync GCP-DR after production rollout
+
+on:
+  push:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+
+  sync-gcp-dr:
+    name: Wait for rollout → Sync GCP-DR
+    runs-on: ubuntu-latest
+    # Only run on deploy commits, not on manual infra changes
+    if: startsWith(github.event.head_commit.message, 'ci: deploy')
+    steps:
+
+      - uses: actions/checkout@v6
+
+      - name: Extract component and version
+        id: info
+        run: |
+          MSG="${{ github.event.head_commit.message }}"
+          # Extract component: backend or frontend
+          if echo "$MSG" | grep -q "backend"; then
+            COMPONENT="backend"
+          elif echo "$MSG" | grep -q "frontend"; then
+            COMPONENT="frontend"
+          else
+            echo "Unknown component in commit message: $MSG"
+            exit 1
+          fi
+          # Extract version: v2.x.x
+          VERSION=$(echo "$MSG" | grep -oP 'v\d+\.\d+\.\d+' | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "Could not extract version from: $MSG"
+            exit 1
+          fi
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying $COMPONENT $VERSION to GCP-DR after rollout confirmation"
+
+      - name: Wait for production rollout to complete
+        run: |
+          VERSION="${{ steps.info.outputs.version }}"
+          echo "Waiting for kli.st to run backend $VERSION..."
+          for i in $(seq 1 30); do
+            CURRENT=$(curl -sf https://kli.st/api/version | jq -r '.version' 2>/dev/null || echo "")
+            if [ "$CURRENT" = "$VERSION" ]; then
+              echo "Production confirmed running $VERSION — rollout succeeded"
+              exit 0
+            fi
+            echo "Attempt $i/30: current=$CURRENT, expected=$VERSION — waiting 30s..."
+            sleep 30
+          done
+          echo "Timeout: production did not reach $VERSION in 15 minutes"
+          exit 1
+
+      - name: Sync GCP-DR via kubectl
+        run: |
+          COMPONENT="${{ steps.info.outputs.component }}"
+          VERSION="${{ steps.info.outputs.version }}"
+          IMAGE="ghcr.io/dannut/klist-${COMPONENT}:${VERSION}"
+
+          echo "${{ secrets.GCP_KUBECONFIG }}" > /tmp/gcp.yaml
+          chmod 600 /tmp/gcp.yaml
+
+          echo "Updating $COMPONENT to $VERSION on GCP-DR..."
+          kubectl set image deployment/kli-${COMPONENT} \
+            kli-${COMPONENT}=${IMAGE} \
+            -n kli \
+            --kubeconfig /tmp/gcp.yaml
+
+          kubectl rollout status deployment/kli-${COMPONENT} \
+            -n kli \
+            --kubeconfig /tmp/gcp.yaml \
+            --timeout=5m
+
+          rm -f /tmp/gcp.yaml
+          echo "GCP-DR synced to $COMPONENT $VERSION successfully"
+
+      - name: Notify failure
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'GCP-DR sync FAILED — ${{ steps.info.outputs.component }} ${{ steps.info.outputs.version }}',
+              body: '## GCP-DR Sync Failed\n\n' +
+                '**Component:** ${{ steps.info.outputs.component }}\n' +
+                '**Version:** ${{ steps.info.outputs.version }}\n\n' +
+                'Production rollout may have failed or GCP-DR sync encountered an error.\n' +
+                'Check the workflow run for details.',
+              labels: ['ci-failure'],
+            });
