@@ -12,7 +12,6 @@ jobs:
   sync-gcp-dr:
     name: Wait for rollout - Sync GCP-DR
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'deploy backend') || contains(github.event.head_commit.message, 'deploy frontend')
     steps:
 
       - uses: actions/checkout@v6
@@ -20,27 +19,31 @@ jobs:
       - name: Extract component and version
         id: info
         run: |
-          MSG="${{ github.event.head_commit.message }}"
-          # Extract component: backend or frontend
+          # Check all recent commits on main for a deploy commit
+          DEPLOY_MSG=$(git log --oneline -10 | grep -m1 "deploy backend\|deploy frontend" || true)
+          if [ -z "$DEPLOY_MSG" ]; then
+            echo "No deploy commit found in recent history — skipping GCP-DR sync"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          MSG="$DEPLOY_MSG"
           if echo "$MSG" | grep -q "backend"; then
             COMPONENT="backend"
-          elif echo "$MSG" | grep -q "frontend"; then
-            COMPONENT="frontend"
           else
-            echo "Unknown component in commit message: $MSG"
-            exit 1
+            COMPONENT="frontend"
           fi
-          # Extract version: v2.x.x
           VERSION=$(echo "$MSG" | grep -oP 'v\d+\.\d+\.\d+' | head -1)
           if [ -z "$VERSION" ]; then
-            echo "Could not extract version from: $MSG"
-            exit 1
+            echo "Could not extract version — skipping"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
           fi
           echo "component=$COMPONENT" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Deploying $COMPONENT $VERSION to GCP-DR after rollout confirmation"
 
       - name: Wait for production rollout to complete
+        if: steps.info.outputs.skip != 'true'
         run: |
           VERSION="${{ steps.info.outputs.version }}"
           echo "Waiting for kli.st to run backend $VERSION..."
@@ -57,6 +60,7 @@ jobs:
           exit 1
 
       - name: Sync GCP-DR via kubectl
+        if: steps.info.outputs.skip != 'true'
         run: |
           COMPONENT="${{ steps.info.outputs.component }}"
           VERSION="${{ steps.info.outputs.version }}"
