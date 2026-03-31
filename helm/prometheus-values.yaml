@@ -1,3 +1,21 @@
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false
+
+# K3s: aceste componente nu expun metrici Prometheus — dezactivam scraping-ul
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
 alertmanager:
   alertmanagerSpec:
     nodeSelector:
@@ -40,19 +58,13 @@ grafana:
     type: NodePort
   nodeSelector:
     kubernetes.io/hostname: master
-defaultRules:
-  rules:
-    etcd: false
-    kubeControllerManager: false
-    kubeSchedulerAlerting: false
-    kubeProxy: false
 
 prometheus:
   prometheusSpec:
     nodeSelector:
       kubernetes.io/hostname: master
-    scrapeInterval: "1s"
-    evaluationInterval: "1s"
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
     retention: 15d
     storageSpec:
       volumeClaimTemplate:
