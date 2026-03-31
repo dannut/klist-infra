@@ -12,7 +12,7 @@ jobs:
   sync-gcp-dr:
     name: Wait for rollout - Sync GCP-DR
     runs-on: ubuntu-latest
-    if: "startsWith(github.event.head_commit.message, 'ci: deploy')"
+    if: contains(github.event.head_commit.message, 'deploy backend') || contains(github.event.head_commit.message, 'deploy frontend')
     steps:
 
       - uses: actions/checkout@v6
