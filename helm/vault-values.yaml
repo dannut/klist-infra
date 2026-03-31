@@ -65,6 +65,7 @@ server:
   priorityClassName: system-cluster-critical
 
   # Așteaptă vault-ul mic (transit seal) înainte să pornească
+  # Fără asta, vault-0 pornește, nu găsește transit-ul, iese cu Completed și se repornește
   extraInitContainers:
     - name: wait-for-transit
       image: busybox:1.36
