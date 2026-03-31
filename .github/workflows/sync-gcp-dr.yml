@@ -18,21 +18,23 @@ jobs:
 
       - name: Extract component and version
         id: info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check all recent commits on main for a deploy commit
-          DEPLOY_MSG=$(git log --oneline -10 | grep -m1 "deploy backend\|deploy frontend" || true)
-          if [ -z "$DEPLOY_MSG" ]; then
-            echo "No deploy commit found in recent history — skipping GCP-DR sync"
+          # Find the most recently merged deploy PR on main
+          DEPLOY_PR=$(gh pr list --repo dannut/klist-infra --base main --state merged --limit 5 --json title --jq '.[].title' | grep -m1 "Deploy.*to production" || true)
+          if [ -z "$DEPLOY_PR" ]; then
+            echo "No deploy PR found — skipping GCP-DR sync"
             echo "skip=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-          MSG="$DEPLOY_MSG"
-          if echo "$MSG" | grep -q "backend"; then
+          echo "Found deploy PR: $DEPLOY_PR"
+          if echo "$DEPLOY_PR" | grep -qi "backend"; then
             COMPONENT="backend"
           else
             COMPONENT="frontend"
           fi
-          VERSION=$(echo "$MSG" | grep -oP 'v\d+\.\d+\.\d+' | head -1)
+          VERSION=$(echo "$DEPLOY_PR" | grep -oP 'v\d+\.\d+\.\d+' | head -1)
           if [ -z "$VERSION" ]; then
             echo "Could not extract version — skipping"
             echo "skip=true" >> $GITHUB_OUTPUT
