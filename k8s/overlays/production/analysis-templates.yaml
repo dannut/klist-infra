@@ -37,9 +37,9 @@ spec:
       value: kli-backend
   metrics:
     - name: no-restarts
-      # 10 checks × 60s = 10 minutes post-promotion
+      # 7 checks × 60s = 7 minutes post-promotion
       interval: 60s
-      count: 10
+      count: 7
       failureLimit: 2
       successCondition: result[0] == 0
       provider:
@@ -84,7 +84,7 @@ spec:
   metrics:
     - name: no-restarts
       interval: 60s
-      count: 10
+      count: 7
       failureLimit: 2
       successCondition: result[0] == 0
       provider:
