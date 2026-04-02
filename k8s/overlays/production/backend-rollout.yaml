@@ -58,6 +58,10 @@ spec:
                 configMapKeyRef:
                   name: app-version
                   key: version
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -104,7 +108,7 @@ spec:
           - name: container
             value: kli-backend
       # Scale down old (blue) replica after 10 minutes
-      scaleDownDelaySeconds: 120
+      scaleDownDelaySeconds: 60
 
 ---
 # Active service — receives production traffic from Ingress
