@@ -15,7 +15,7 @@ images:
 - name: cloudflare/cloudflared
   newTag: latest
 - name: ghcr.io/dannut/klist-backend
-  newTag: staging-1900480
+  newTag: staging-869536f
 - name: ghcr.io/dannut/klist-frontend
   newTag: staging-c40918e
 
