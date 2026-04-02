@@ -17,7 +17,7 @@ images:
 - name: ghcr.io/dannut/klist-backend
   newTag: staging-bbe2b10
 - name: ghcr.io/dannut/klist-frontend
-  newTag: staging-fed14b8
+  newTag: staging-3094f76
 
 patches:
 - patch: |-
