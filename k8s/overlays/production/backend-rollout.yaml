@@ -58,6 +58,10 @@ spec:
                 configMapKeyRef:
                   name: app-version
                   key: version
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
